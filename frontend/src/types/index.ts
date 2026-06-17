@@ -5,6 +5,7 @@ export interface QueryLog {
   executionTime?: number | null;
   isSlow: boolean;
   explanation?: string | null;
+  explainPlan?: any;
   createdAt: string;
 }
 
