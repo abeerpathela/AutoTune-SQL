@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 
+const queryRoutes = require('./routes/queryRoutes');
+
 const app = express();
 
 // Middleware
@@ -20,6 +22,9 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// API Routes
+app.use('/api/queries', queryRoutes);
 
 // Centralized Error Handler
 app.use((err, req, res, next) => {

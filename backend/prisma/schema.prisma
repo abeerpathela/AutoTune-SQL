@@ -14,5 +14,6 @@ model QueryLog {
   executionTime  Float?
   isSlow         Boolean  @default(false)
   explanation    String?
+  explainPlan    Json?
   createdAt      DateTime @default(now())
 }
