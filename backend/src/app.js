@@ -5,8 +5,13 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const queryRoutes = require('./routes/queryRoutes');
+const optimizationRoutes = require('./routes/optimizationRoutes');
+const getRedisClient = require('./config/redis');
 
 const app = express();
+
+// Initialize Redis
+getRedisClient();
 
 // Middleware
 app.use(helmet());
@@ -25,6 +30,7 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/queries', queryRoutes);
+app.use('/api/optimize', optimizationRoutes);
 
 // Centralized Error Handler
 app.use((err, req, res, next) => {
