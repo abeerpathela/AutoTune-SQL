@@ -1,0 +1,8 @@
+{
+  "name": "autotune-sql",
+  "version": "1.0.0",
+  "scripts": {
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run dev"
+  }
+}

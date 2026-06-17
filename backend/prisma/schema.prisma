@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model QueryLog {
+  id             String   @id @default(uuid())
+  originalQuery  String
+  optimizedQuery String?
+  executionTime  Float?
+  isSlow         Boolean  @default(false)
+  explanation    String?
+  createdAt      DateTime @default(now())
+}
