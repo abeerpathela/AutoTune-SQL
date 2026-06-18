@@ -25,6 +25,15 @@ router.post('/:id', optimizationLimiter, async (req, res, next) => {
     });
   } catch (error) {
     console.error('Optimization error:', error);
+    
+    // Check for model decommissioned error
+    if (error.message === 'The configured AI model is no longer available. Please update the Groq model configuration.') {
+      return res.status(500).json({
+        status: 'error',
+        message: 'The configured AI model is no longer available. Please update the Groq model configuration.'
+      });
+    }
+    
     res.status(500).json({
       status: 'error',
       message: 'Failed to optimize query. Please try again or review manually.'

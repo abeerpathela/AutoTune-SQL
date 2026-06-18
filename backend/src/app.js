@@ -7,6 +7,7 @@ require('dotenv').config();
 const queryRoutes = require('./routes/queryRoutes');
 const optimizationRoutes = require('./routes/optimizationRoutes');
 const getRedisClient = require('./config/redis');
+require('./services/aiService'); // Import to run startup validation
 
 const app = express();
 
