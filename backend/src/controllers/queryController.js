@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { analyzeQuery } = require('../services/analyzerService');
+const { predict } = require('../services/mlService');
 
 const submitQuery = async (req, res, next) => {
   try {
@@ -10,6 +11,9 @@ const submitQuery = async (req, res, next) => {
     const isSlow = analysis.executionTime > 100 || (
       analysis.hasSequentialScan && analysis.planRows > 1000
     );
+    
+    // Get ML prediction
+    const mlPrediction = predict(analysis.explainPlan);
     
     const queryLog = await prisma.queryLog.create({
       data: {
@@ -24,7 +28,9 @@ const submitQuery = async (req, res, next) => {
       status: 'success',
       data: {
         queryLog,
-        analysis
+        analysis,
+        mlPrediction,
+        mlAdvice: mlPrediction.advice
       }
     });
   } catch (error) {

@@ -19,6 +19,7 @@
     "groq-sdk": "^0.3.0",
     "helmet": "^7.0.0",
     "ioredis": "^5.3.2",
+    "ml-random-forest": "^2.0.1",
     "morgan": "^1.10.0",
     "zod": "^3.22.0"
   },

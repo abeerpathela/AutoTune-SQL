@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const queryRoutes = require('./routes/queryRoutes');
 const optimizationRoutes = require('./routes/optimizationRoutes');
+const mlRoutes = require('./routes/mlRoutes');
 const getRedisClient = require('./config/redis');
 require('./services/aiService'); // Import to run startup validation
 
@@ -32,6 +33,7 @@ app.get('/api/health', (req, res) => {
 // API Routes
 app.use('/api/queries', queryRoutes);
 app.use('/api/optimize', optimizationRoutes);
+app.use('/api/ml', mlRoutes);
 
 // Centralized Error Handler
 app.use((err, req, res, next) => {
