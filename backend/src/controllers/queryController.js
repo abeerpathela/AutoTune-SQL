@@ -8,19 +8,27 @@ const submitQuery = async (req, res, next) => {
     const { sql } = req.body;
     
     const analysis = await analyzeQuery(sql);
-    const isSlow = analysis.executionTime > 100 || (
-      analysis.hasSequentialScan && analysis.planRows > 1000
-    );
     
-    // Get ML prediction
-    const mlPrediction = predict(analysis.explainPlan);
+    // Create a temporary log object to pass to predict
+    const tempLog = {
+      isSyntaxValid: analysis.isSyntaxValid,
+      joinTypeCount: analysis.joinTypeCount,
+      errorCategory: analysis.errorCategory
+    };
+    
+    const mlPrediction = predict(analysis.explainPlan, tempLog);
     
     const queryLog = await prisma.queryLog.create({
       data: {
         originalQuery: analysis.originalQuery,
         executionTime: analysis.executionTime,
-        isSlow,
-        explainPlan: analysis.explainPlan
+        isSlow: analysis.isSlow || false,
+        explainPlan: analysis.explainPlan,
+        isSyntaxValid: analysis.isSyntaxValid,
+        errorCategory: analysis.errorCategory,
+        postgresError: analysis.postgresError,
+        joinTypeCount: analysis.joinTypeCount,
+        logicFlaws: analysis.logicFlaws.length > 0 ? analysis.logicFlaws : null
       }
     });
     
@@ -34,12 +42,6 @@ const submitQuery = async (req, res, next) => {
       }
     });
   } catch (error) {
-    if (error.code === '42601' || error.message.toLowerCase().includes('syntax')) {
-      return res.status(400).json({
-        status: 'error',
-        message: error.message
-      });
-    }
     if (error.message === 'Dangerous SQL operations are not allowed.') {
       return res.status(400).json({
         status: 'error',

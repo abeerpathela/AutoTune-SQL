@@ -1,5 +1,6 @@
 const express = require('express');
 const { trainModel, getStats } = require('../services/mlService');
+const { getDatasetStats } = require('../controllers/datasetController');
 
 const router = express.Router();
 
@@ -36,5 +37,8 @@ router.get('/stats', (req, res, next) => {
     next(error);
   }
 });
+
+// Get dataset stats
+router.get('/dataset-stats', getDatasetStats);
 
 module.exports = router;

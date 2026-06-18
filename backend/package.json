@@ -8,9 +8,12 @@
     "dev": "nodemon src/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "seed:data": "node scripts/setupMockData.js",
+    "generate:workload": "node scripts/workloadGenerator.js",
     "test": "jest"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.5.0",
     "@prisma/client": "^6.19.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
