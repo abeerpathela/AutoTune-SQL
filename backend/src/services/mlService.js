@@ -1,8 +1,19 @@
 const { PrismaClient } = require('@prisma/client');
 const { RandomForestClassifier } = require('ml-random-forest');
+const fs = require('fs');
+const path = require('path');
 const prisma = new PrismaClient();
 
-// In-memory trained model
+// Paths for model and stats persistence
+const MODEL_PATH = path.join(__dirname, '../../data/ml-model.json');
+const DATA_DIR = path.join(__dirname, '../../data');
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// In-memory trained model and stats
 let trainedModel = null;
 let trainingStats = {
   success: false,
@@ -13,6 +24,134 @@ let trainingStats = {
   logicRecords: 0,
   unknownRecords: 0,
   confusionMatrix: null
+};
+
+// Save model to disk
+const saveModelToDisk = () => {
+  try {
+    if (trainedModel) {
+      const modelData = JSON.stringify(trainedModel.toJSON());
+      fs.writeFileSync(MODEL_PATH, modelData);
+      console.log('✅ ML model saved to disk');
+    }
+  } catch (error) {
+    console.error('❌ Failed to save ML model to disk:', error);
+  }
+};
+
+// Load model from disk
+const loadModelFromDisk = () => {
+  try {
+    if (fs.existsSync(MODEL_PATH)) {
+      const modelData = fs.readFileSync(MODEL_PATH, 'utf-8');
+      const modelJson = JSON.parse(modelData);
+      trainedModel = RandomForestClassifier.load(modelJson);
+      
+      // Debug: log model methods
+      console.log('🔍 Loaded model keys:', Object.keys(trainedModel));
+      console.log('🔍 predict exists:', typeof trainedModel.predict === 'function');
+      console.log('🔍 predictProbability exists:', typeof trainedModel.predictProbability === 'function');
+      
+      console.log('✅ ML model loaded from disk');
+      return true;
+    }
+    console.log('⚠️ No saved ML model found on disk');
+    return false;
+  } catch (error) {
+    console.error('❌ Failed to load ML model from disk:', error);
+    // Delete broken model file
+    try {
+      if (fs.existsSync(MODEL_PATH)) {
+        fs.unlinkSync(MODEL_PATH);
+      }
+    } catch (unlinkErr) {
+      console.error('❌ Failed to delete broken model file:', unlinkErr);
+    }
+    trainedModel = null;
+    return false;
+  }
+};
+
+// Save stats to database
+const saveStatsToDB = async (stats) => {
+  try {
+    // Check if we already have a stats record
+    const existingStats = await prisma.mLModelStats.findFirst();
+    
+    if (existingStats) {
+      await prisma.mLModelStats.update({
+        where: { id: existingStats.id },
+        data: {
+          success: stats.success,
+          accuracy: stats.accuracy,
+          recordCount: stats.recordCount,
+          performanceRecords: stats.performanceRecords,
+          syntaxRecords: stats.syntaxRecords,
+          logicRecords: stats.logicRecords,
+          unknownRecords: stats.unknownRecords,
+          confusionMatrix: stats.confusionMatrix,
+          message: stats.message
+        }
+      });
+    } else {
+      await prisma.mLModelStats.create({
+        data: {
+          success: stats.success,
+          accuracy: stats.accuracy,
+          recordCount: stats.recordCount,
+          performanceRecords: stats.performanceRecords,
+          syntaxRecords: stats.syntaxRecords,
+          logicRecords: stats.logicRecords,
+          unknownRecords: stats.unknownRecords,
+          confusionMatrix: stats.confusionMatrix,
+          message: stats.message
+        }
+      });
+    }
+    console.log('✅ ML stats saved to database');
+  } catch (error) {
+    console.error('❌ Failed to save ML stats to database:', error);
+  }
+};
+
+// Load stats from database
+const loadStatsFromDB = async () => {
+  try {
+    const dbStats = await prisma.mLModelStats.findFirst();
+    
+    if (dbStats) {
+      trainingStats = {
+        success: dbStats.success,
+        recordCount: dbStats.recordCount || 0,
+        accuracy: dbStats.accuracy,
+        performanceRecords: dbStats.performanceRecords || 0,
+        syntaxRecords: dbStats.syntaxRecords || 0,
+        logicRecords: dbStats.logicRecords || 0,
+        unknownRecords: dbStats.unknownRecords || 0,
+        confusionMatrix: dbStats.confusionMatrix,
+        message: dbStats.message
+      };
+      console.log('✅ ML stats loaded from database');
+    } else {
+      console.log('⚠️ No existing ML stats found in database');
+    }
+  } catch (error) {
+    console.error('❌ Failed to load ML stats from database:', error);
+  }
+};
+
+// Initialize service on load
+const initializeMLService = async () => {
+  await loadStatsFromDB();
+  const modelLoaded = loadModelFromDisk();
+  
+  // Auto-train if no model exists but we have enough training records
+  if (!modelLoaded && trainingStats.performanceRecords >= 2) {
+    console.log('🔄 Auto-training ML model (no saved model found)...');
+    await trainModel();
+  } else if (!modelLoaded) {
+    console.log('⚠️ Not enough training records to auto-train ML model');
+  }
 };
 
 // Recursively count occurrences of node types
@@ -139,6 +278,7 @@ const trainModel = async () => {
         accuracy: null,
         confusionMatrix: null
       };
+      await saveStatsToDB(trainingStats);
       return trainingStats;
     }
 
@@ -212,6 +352,10 @@ const trainModel = async () => {
     console.log('Accuracy:', trainingStats.accuracy + '%');
     console.log('Confusion Matrix:', trainingStats.confusionMatrix);
 
+    // Save model to disk and stats to database
+    saveModelToDisk();
+    await saveStatsToDB(trainingStats);
+
     return trainingStats;
   } catch (error) {
     console.error('❌ ML training error:', error);
@@ -227,6 +371,7 @@ const trainModel = async () => {
       unknownRecords: 0,
       confusionMatrix: null
     };
+    await saveStatsToDB(trainingStats);
     return trainingStats;
   }
 };
@@ -234,18 +379,31 @@ const trainModel = async () => {
 // Predict slowness probability
 const predict = (explainPlan, log) => {
   if (!trainedModel) {
+    console.log('⚠️ No trained model available');
     return { probability: 0.5, prediction: 'UNKNOWN', advice: 'ML model not trained yet' };
   }
 
   try {
     const features = extractFeatures(explainPlan, log);
-    const probabilities = trainedModel.predictProba([features])[0];
+    console.log('🔍 Prediction features:', features);
 
-    const isSlowProb = probabilities[1] || 0.5;
-    const prediction = isSlowProb > 0.5 ? 'HIGH RISK' : 'LOW RISK';
+    let isSlowProb = 0.5;
+    let prediction;
+
+    if (typeof trainedModel.predictProbability === 'function') {
+      const probabilities = trainedModel.predictProbability([features], 1);
+      isSlowProb = probabilities[0] || 0.5;
+    } else if (typeof trainedModel.predict === 'function') {
+      const predictionResult = trainedModel.predict([features])[0];
+      isSlowProb = predictionResult === 1 ? 0.75 : 0.25;
+    }
+
+    prediction = isSlowProb > 0.5 ? 'HIGH RISK' : 'LOW RISK';
     const advice = prediction === 'HIGH RISK'
       ? 'ML predicts this query is HIGH RISK'
       : 'ML predicts this query is LOW RISK';
+
+    console.log('🔍 Prediction result:', { probability: isSlowProb, prediction, advice });
 
     return {
       probability: Math.round(isSlowProb * 10000) / 100,
@@ -265,5 +423,6 @@ module.exports = {
   extractFeatures,
   trainModel,
   predict,
-  getStats
+  getStats,
+  initializeMLService
 };

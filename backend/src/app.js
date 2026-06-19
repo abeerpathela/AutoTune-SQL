@@ -7,13 +7,16 @@ require('dotenv').config();
 const queryRoutes = require('./routes/queryRoutes');
 const optimizationRoutes = require('./routes/optimizationRoutes');
 const mlRoutes = require('./routes/mlRoutes');
+const connectionRoutes = require('./routes/connectionRoutes');
 const getRedisClient = require('./config/redis');
+const { initializeMLService } = require('./services/mlService');
 require('./services/aiService'); // Import to run startup validation
 
 const app = express();
 
-// Initialize Redis
+// Initialize services
 getRedisClient();
+initializeMLService();
 
 // Middleware
 app.use(helmet());
@@ -34,6 +37,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/queries', queryRoutes);
 app.use('/api/optimize', optimizationRoutes);
 app.use('/api/ml', mlRoutes);
+app.use('/api/connections', connectionRoutes);
 
 // Centralized Error Handler
 app.use((err, req, res, next) => {

@@ -36,8 +36,10 @@ export const MLStats = () => {
     try {
       const data = await api.getTrainingStats();
       setStats(data);
+      return data;
     } catch (err) {
       console.error(err);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -57,13 +59,35 @@ export const MLStats = () => {
   };
 
   useEffect(() => {
-    loadStats();
+    const initialize = async () => {
+      const currentStats = await loadStats();
+      
+      // Auto-train if needed
+      if (currentStats && (!currentStats.success || currentStats.recordCount === 0)) {
+        console.log('Auto-training model...');
+        setTraining(true);
+        try {
+          const newStats = await api.trainModel();
+          setStats(newStats);
+          toast.success('Model trained automatically!');
+        } catch (err) {
+          console.error('Auto-train failed:', err);
+        } finally {
+          setTraining(false);
+        }
+      }
+    };
+    
+    initialize();
   }, []);
 
-  if (loading) {
+  if (loading || training) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="h-full flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+        <p className="text-gray-300 text-lg">
+          {training ? 'Training model for first use...' : 'Loading ML statistics...'}
+        </p>
       </div>
     );
   }
@@ -103,19 +127,19 @@ export const MLStats = () => {
         />
         <StatCard
           title="Training Records"
-          value={stats?.recordCount.toLocaleString() || 0}
+          value={stats?.recordCount?.toLocaleString() || 0}
           icon={Brain}
           color="bg-blue-600"
         />
         <StatCard
           title="True Positives"
-          value={stats?.confusionMatrix.truePositive.toLocaleString() || 0}
+          value={stats?.confusionMatrix?.truePositive?.toLocaleString() || 0}
           icon={CheckCircle2}
           color="bg-emerald-600"
         />
         <StatCard
           title="False Positives"
-          value={stats?.confusionMatrix.falsePositive.toLocaleString() || 0}
+          value={stats?.confusionMatrix?.falsePositive?.toLocaleString() || 0}
           icon={AlertCircle}
           color="bg-orange-600"
         />
@@ -127,19 +151,19 @@ export const MLStats = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Performance</span>
-              <span className="text-white font-mono">{stats?.performanceRecords.toLocaleString()}</span>
+              <span className="text-white font-mono">{stats?.performanceRecords?.toLocaleString() || 0}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Syntax Errors</span>
-              <span className="text-white font-mono">{stats?.syntaxRecords.toLocaleString()}</span>
+              <span className="text-white font-mono">{stats?.syntaxRecords?.toLocaleString() || 0}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Logic Errors</span>
-              <span className="text-white font-mono">{stats?.logicRecords.toLocaleString()}</span>
+              <span className="text-white font-mono">{stats?.logicRecords?.toLocaleString() || 0}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Unknown</span>
-              <span className="text-white font-mono">{stats?.unknownRecords.toLocaleString()}</span>
+              <span className="text-white font-mono">{stats?.unknownRecords?.toLocaleString() || 0}</span>
             </div>
           </div>
         </div>
@@ -149,25 +173,25 @@ export const MLStats = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-emerald-900/30 border border-emerald-800 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-emerald-400">
-                {stats?.confusionMatrix.truePositive}
+                {stats?.confusionMatrix?.truePositive || 0}
               </div>
               <div className="text-sm text-emerald-300">True Positive</div>
             </div>
             <div className="bg-orange-900/30 border border-orange-800 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-orange-400">
-                {stats?.confusionMatrix.falsePositive}
+                {stats?.confusionMatrix?.falsePositive || 0}
               </div>
               <div className="text-sm text-orange-300">False Positive</div>
             </div>
             <div className="bg-emerald-900/30 border border-emerald-800 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-emerald-400">
-                {stats?.confusionMatrix.trueNegative}
+                {stats?.confusionMatrix?.trueNegative || 0}
               </div>
               <div className="text-sm text-emerald-300">True Negative</div>
             </div>
             <div className="bg-red-900/30 border border-red-800 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-red-400">
-                {stats?.confusionMatrix.falseNegative}
+                {stats?.confusionMatrix?.falseNegative || 0}
               </div>
               <div className="text-sm text-red-300">False Negative</div>
             </div>

@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { detectLogicFlaws } = require('./logicAnalyzer');
+const { runExplain } = require('./dbConnector');
 
 const DANGEROUS_KEYWORDS = ['DROP', 'DELETE', 'TRUNCATE', 'ALTER', 'CREATE', 'INSERT', 'UPDATE', 'GRANT', 'REVOKE'];
 
@@ -23,7 +24,7 @@ function countNodes(plan, targetTypes) {
 }
 
 // Main analyze function - STRINGENT priority order
-async function analyzeQuery(sql) {
+async function analyzeQuery(sql, connectionId = null) {
   const sanitized = sql.trim();
   
   // Check dangerous first
@@ -34,16 +35,34 @@ async function analyzeQuery(sql) {
     }
   }
 
+  let connectionConfig = null;
+  if (connectionId) {
+    const connection = await prisma.dbConnection.findUnique({
+      where: { id: connectionId }
+    });
+    if (!connection) {
+      throw new Error('Database connection not found');
+    }
+    connectionConfig = connection;
+  }
+
   // ---------------------------
   // Step 1: Syntax Check FIRST
   // ---------------------------
   let explainPlan = null;
+  let fullExplainPlan = null;
   let isSyntaxValid = true;
   let postgresError = null;
   
   try {
-    const explainResult = await prisma.$queryRawUnsafe(`EXPLAIN (FORMAT JSON) ${sanitized}`);
-    explainPlan = explainResult[0]['QUERY PLAN'][0];
+    if (connectionConfig) {
+      const explainResult = await runExplain(connectionConfig, sanitized);
+      explainPlan = explainResult.explainPlan;
+      fullExplainPlan = explainResult.fullExplainPlan;
+    } else {
+      const explainResult = await prisma.$queryRawUnsafe(`EXPLAIN (FORMAT JSON) ${sanitized}`);
+      explainPlan = explainResult[0]['QUERY PLAN'][0];
+    }
   } catch (err) {
     isSyntaxValid = false;
     postgresError = err.message;
@@ -74,7 +93,6 @@ async function analyzeQuery(sql) {
   const logicFlaws = detectLogicFlaws(sanitized);
   if (logicFlaws.length > 0) {
     console.log(`✅ Classified as Logic Error, ${logicFlaws.length} flaws found`);
-    // Calculate some basic stats from the EXPLAIN (without ANALYZE)
     const plan = explainPlan.Plan;
     return {
       originalQuery: sanitized,
@@ -100,14 +118,23 @@ async function analyzeQuery(sql) {
   // ---------------------------
   console.log(`🚀 Running Performance Check on query...`);
   try {
-    const startTime = process.hrtime();
-    const fullExplainResult = await prisma.$queryRawUnsafe(`EXPLAIN (FORMAT JSON, ANALYZE) ${sanitized}`);
-    const [seconds, nanoseconds] = process.hrtime(startTime);
-    const roundTripTime = seconds * 1000 + nanoseconds / 1000000;
+    let plan = null;
+    let actualTotalTime = null;
+    let roundTripTime = 0;
 
-    const fullExplainPlan = fullExplainResult[0]['QUERY PLAN'][0];
-    const plan = fullExplainPlan.Plan;
-    const actualTotalTime = fullExplainPlan['Execution Time'] || plan['Actual Total Time'];
+    if (connectionConfig && fullExplainPlan) {
+      plan = fullExplainPlan.Plan;
+      actualTotalTime = fullExplainPlan['Execution Time'] || plan['Actual Total Time'];
+    } else {
+      const startTime = process.hrtime();
+      const fullExplainResult = await prisma.$queryRawUnsafe(`EXPLAIN (FORMAT JSON, ANALYZE) ${sanitized}`);
+      const [seconds, nanoseconds] = process.hrtime(startTime);
+      roundTripTime = seconds * 1000 + nanoseconds / 1000000;
+      fullExplainPlan = fullExplainResult[0]['QUERY PLAN'][0];
+      plan = fullExplainPlan.Plan;
+      actualTotalTime = fullExplainPlan['Execution Time'] || plan['Actual Total Time'];
+    }
+
     const hasSeqScan = countNodes(plan, ['Seq Scan']) > 0;
     const planRows = plan['Plan Rows'] || 0;
     const isSlow = actualTotalTime > 100 || (hasSeqScan && planRows > 1000);

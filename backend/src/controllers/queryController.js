@@ -5,9 +5,9 @@ const { predict } = require('../services/mlService');
 
 const submitQuery = async (req, res, next) => {
   try {
-    const { sql } = req.body;
+    const { sql, connectionId } = req.body;
     
-    const analysis = await analyzeQuery(sql);
+    const analysis = await analyzeQuery(sql, connectionId);
     
     // Create a temporary log object to pass to predict
     const tempLog = {
@@ -28,21 +28,24 @@ const submitQuery = async (req, res, next) => {
         errorCategory: analysis.errorCategory,
         postgresError: analysis.postgresError,
         joinTypeCount: analysis.joinTypeCount,
-        logicFlaws: analysis.logicFlaws.length > 0 ? analysis.logicFlaws : null
+        logicFlaws: analysis.logicFlaws.length > 0 ? analysis.logicFlaws : null,
+        connectionId: connectionId || null
       }
     });
     
     res.status(200).json({
       status: 'success',
       data: {
-        queryLog,
-        analysis,
+        id: queryLog.id,
         mlPrediction,
-        mlAdvice: mlPrediction.advice
+        executionTime: queryLog.executionTime,
+        isSlow: queryLog.isSlow,
+        queryLog,
+        analysis
       }
     });
   } catch (error) {
-    if (error.message === 'Dangerous SQL operations are not allowed.') {
+    if (error.message === 'Dangerous SQL operations are not allowed.' || error.message === 'Database connection not found' || error.message === 'Only SELECT, WITH, or EXPLAIN queries are allowed.') {
       return res.status(400).json({
         status: 'error',
         message: error.message
@@ -58,7 +61,10 @@ const getHistory = async (req, res, next) => {
       orderBy: {
         createdAt: 'desc'
       },
-      take: 50
+      take: 50,
+      include: {
+        connection: true
+      }
     });
     
     res.status(200).json({

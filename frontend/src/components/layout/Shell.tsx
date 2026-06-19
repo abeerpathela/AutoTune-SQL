@@ -5,7 +5,8 @@ import {
   Zap,
   Clock,
   Brain,
-  Terminal
+  Terminal,
+  Database
 } from 'lucide-react';
 
 const NavItem = ({
@@ -37,6 +38,7 @@ export const Shell = ({ children }: { children: React.ReactNode }) => {
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Overview' },
+    { to: '/connections', icon: Database, label: 'Database Connections' },
     { to: '/studio', icon: Zap, label: 'Optimization Studio' },
     { to: '/history', icon: Clock, label: 'Query History' },
     { to: '/ml-stats', icon: Brain, label: 'ML Model Stats' }

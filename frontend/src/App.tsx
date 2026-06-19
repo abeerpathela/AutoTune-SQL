@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Studio } from './pages/Studio';
 import { History } from './pages/History';
 import { MLStats } from './pages/MLStats';
+import { Connections } from './pages/Connections';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/studio" element={<Studio />} />
           <Route path="/history" element={<History />} />
           <Route path="/ml-stats" element={<MLStats />} />
+          <Route path="/connections" element={<Connections />} />
         </Routes>
       </Shell>
       <Toaster richColors />

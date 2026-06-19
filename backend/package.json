@@ -24,6 +24,7 @@
     "ioredis": "^5.3.2",
     "ml-random-forest": "^2.0.1",
     "morgan": "^1.10.0",
+    "pg": "^8.22.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {

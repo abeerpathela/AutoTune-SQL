@@ -13,6 +13,9 @@ dist
 dist-ssr
 *.local
 
+# ML Model data
+data/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

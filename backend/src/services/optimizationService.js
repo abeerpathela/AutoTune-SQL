@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const getRedisClient = require('../config/redis');
 const { optimizeSQL } = require('./aiService');
+const { getSchemaMetadata } = require('./dbConnector');
 
 const CACHE_TTL = 86400; // 24 hours in seconds
 
@@ -17,7 +18,8 @@ const getOptimization = async (queryLogId) => {
 
   // Cache miss - fetch from DB and optimize
   const queryLog = await prisma.queryLog.findUnique({
-    where: { id: queryLogId }
+    where: { id: queryLogId },
+    include: { connection: true }
   });
 
   if (!queryLog) {
@@ -34,8 +36,16 @@ const getOptimization = async (queryLogId) => {
     return result;
   }
 
+  let schemaMetadata = null;
+  if (queryLog.connection) {
+    const schemaResult = await getSchemaMetadata(queryLog.connection);
+    if (schemaResult.success) {
+      schemaMetadata = schemaResult.schema;
+    }
+  }
+
   // Need to optimize
-  const optimization = await optimizeSQL(queryLog.originalQuery, queryLog.explainPlan);
+  const optimization = await optimizeSQL(queryLog.originalQuery, queryLog.explainPlan, schemaMetadata);
 
   // Save to DB
   const updatedQueryLog = await prisma.queryLog.update({

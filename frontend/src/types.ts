@@ -1,3 +1,14 @@
+export interface DbConnection {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  password?: string;
+  createdAt: string;
+}
+
 export interface QueryLog {
   id: string;
   originalQuery: string;
@@ -10,6 +21,9 @@ export interface QueryLog {
   isSyntaxValid?: boolean | null;
   errorCategory?: string | null;
   logicFlaws?: string[] | null;
+  postgresError?: string | null;
+  connectionId?: string | null;
+  connection?: DbConnection | null;
 }
 
 export interface DatasetStats {
@@ -43,18 +57,23 @@ export interface TrainingStats {
 export interface AnalysisResult {
   status: string;
   data: {
-    queryLog: QueryLog;
-    analysis: any;
+    id: string;
     mlPrediction: {
       probability: number;
       prediction: string;
       advice: string;
     };
-    mlAdvice: string;
+    executionTime?: number | null;
+    isSlow: boolean;
+    queryLog: QueryLog;
+    analysis: any;
   };
 }
 
 export interface OptimizationResult {
-  optimizedQuery?: string;
-  explanation?: string;
+  status: string;
+  data: {
+    optimizedQuery?: string;
+    explanation?: string;
+  };
 }

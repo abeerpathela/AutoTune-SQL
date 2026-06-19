@@ -22,9 +22,14 @@ const validateGroqConfig = () => {
 
 validateGroqConfig();
 
-const optimizeSQL = async (originalQuery, explainPlan) => {
-  const prompt = `You are an expert PostgreSQL DBA. Analyze the following PostgreSQL query and its EXPLAIN plan. Rewrite the query for maximum performance while maintaining the same results.
+const optimizeSQL = async (originalQuery, explainPlan, schemaMetadata = null) => {
+  let schemaContext = '';
+  if (schemaMetadata) {
+    schemaContext = `\nDatabase Schema Metadata:\n${JSON.stringify(schemaMetadata, null, 2)}\n`;
+  }
 
+  const prompt = `You are an expert PostgreSQL DBA. Analyze the following PostgreSQL query and its EXPLAIN plan. Rewrite the query for maximum performance while maintaining the same results.
+${schemaContext}
 Original Query:
 ${originalQuery}
 

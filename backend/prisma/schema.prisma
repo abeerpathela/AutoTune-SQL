@@ -7,20 +7,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model DbConnection {
+  id          String     @id @default(uuid())
+  name        String
+  host        String
+  port        Int        @default(5432)
+  database    String
+  username    String
+  password    String
+  createdAt   DateTime   @default(now())
+  queryLogs   QueryLog[]
+
+  @@map("db_connections")
+}
+
 model QueryLog {
-  id               String   @id @default(uuid())
+  id               String         @id @default(uuid())
   originalQuery    String
   optimizedQuery   String?
   executionTime    Float?
-  isSlow           Boolean  @default(false)
+  isSlow           Boolean        @default(false)
   explainPlan      Json?
   isSyntaxValid    Boolean?
   errorCategory    String?
   postgresError    String?
-  joinTypeCount    Int      @default(0)
+  joinTypeCount    Int            @default(0)
   logicFlaws       Json?
   explanation      String?
-  createdAt        DateTime @default(now())
+  connectionId     String?
+  connection       DbConnection?  @relation(fields: [connectionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt        DateTime       @default(now())
+}
+
+model MLModelStats {
+  id                Int      @id @default(autoincrement())
+  success           Boolean  @default(false)
+  accuracy          Float?
+  recordCount       Int?
+  performanceRecords Int?
+  syntaxRecords     Int?
+  logicRecords      Int?
+  unknownRecords    Int?
+  confusionMatrix   Json?
+  message           String?
+  updatedAt         DateTime @updatedAt
 }
 
 model orders {
