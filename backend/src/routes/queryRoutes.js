@@ -1,6 +1,6 @@
 const express = require('express');
 const { z } = require('zod');
-const { submitQuery } = require('../controllers/queryController');
+const { submitQuery, getHistory } = require('../controllers/queryController');
 
 const router = express.Router();
 
@@ -22,5 +22,6 @@ const validateRequest = (req, res, next) => {
 };
 
 router.post('/analyze', validateRequest, submitQuery);
+router.get('/history', getHistory);
 
 module.exports = router;

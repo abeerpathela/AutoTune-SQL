@@ -52,6 +52,25 @@ const submitQuery = async (req, res, next) => {
   }
 };
 
+const getHistory = async (req, res, next) => {
+  try {
+    const history = await prisma.queryLog.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: 50
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      data: history
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
-  submitQuery
+  submitQuery,
+  getHistory
 };
