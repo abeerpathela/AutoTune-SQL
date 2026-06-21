@@ -61,6 +61,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/learn/chapter/:order"
+                  element={
+                    <ProtectedRoute>
+                      <Academy />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/academy"
                   element={
                     <ProtectedRoute>

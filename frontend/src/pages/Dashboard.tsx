@@ -95,6 +95,47 @@ export const Dashboard = () => {
         </motion.p>
       </div>
 
+      {/* Academy Progress Hero */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="spotlight-card rounded-2xl border border-violet-500/30 bg-gradient-to-r from-violet-950/40 to-zinc-900/40 p-8"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div>
+            <p className="text-sm text-violet-400 font-medium mb-1">Academy Progress</p>
+            <h2 className="text-3xl font-bold text-zinc-100 mb-2">
+              {progress.completed} / {progress.total || 30} Chapters
+            </h2>
+            <p className="text-zinc-400">
+              {progress.percentage >= 100
+                ? 'All chapters complete — unlock your certification!'
+                : 'Complete all chapters with ≥80% quiz scores to earn your certificate.'}
+            </p>
+          </div>
+          <div className="flex-1 max-w-xl">
+            <div className="flex justify-between text-sm text-zinc-400 mb-2">
+              <span>Current Progress</span>
+              <span className="text-violet-300 font-semibold">{progress.percentage}%</span>
+            </div>
+            <div className="h-4 bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-700"
+                style={{ width: `${progress.percentage}%` }}
+              />
+            </div>
+            <MagneticButton
+              variant="secondary"
+              onClick={() => { window.location.href = '/learn/chapter/1'; }}
+              className="w-full mt-4"
+            >
+              Continue Learning
+            </MagneticButton>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Stats Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
@@ -153,7 +194,7 @@ export const Dashboard = () => {
               <span className="text-zinc-400">Completed Chapters</span>
               <span className="text-zinc-100 font-medium">{progress.completed} / {progress.total}</span>
             </div>
-            <MagneticButton variant="secondary" onClick={() => window.location.href = '/academy'} className="w-full">
+            <MagneticButton variant="secondary" onClick={() => { window.location.href = '/learn/chapter/1'; }} className="w-full">
               Continue Learning
             </MagneticButton>
           </div>

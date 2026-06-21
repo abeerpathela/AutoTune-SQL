@@ -101,12 +101,34 @@ export interface Chapter {
   id: string;
   title: string;
   content: string;
+  videoUrl?: string;
+  practiceSql?: string;
   order: number;
+  globalOrder?: number;
   courseId: string;
+  moduleTitle?: string;
   quiz?: Quiz;
-  progress?: UserProgress[];
-  createdAt: string;
-  updatedAt: string;
+  quizId?: string;
+  quizQuestionCount?: number;
+  progress?: ChapterProgressState;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ChapterProgressState {
+  isWatched: boolean;
+  exerciseCompleted: boolean;
+  quizScore: number | null;
+  isUnlocked: boolean;
+  status: 'IN_PROGRESS' | 'COMPLETED';
+  isCompleted?: boolean;
+}
+
+export interface QuizQuestion {
+  id: number;
+  question: string;
+  options: string[];
+  correctAnswer: number;
 }
 
 export interface Quiz {
@@ -122,6 +144,10 @@ export interface UserProgress {
   userId: string;
   chapterId: string;
   status: 'IN_PROGRESS' | 'COMPLETED';
+  isWatched?: boolean;
+  exerciseCompleted?: boolean;
+  quizScore?: number | null;
+  isUnlocked?: boolean;
   createdAt: string;
   updatedAt: string;
 }

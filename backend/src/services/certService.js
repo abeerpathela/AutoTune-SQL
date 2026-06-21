@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const fs = require('fs');
 const path = require('path');
 const { FRONTEND_URL } = require('../config/appConfig');
+const { TOTAL_CHAPTERS, PASS_THRESHOLD } = require('./academyService');
 
 const prisma = new PrismaClient();
 
@@ -20,12 +21,13 @@ const generateCertificate = async (userId, type) => {
   const completedChapters = await prisma.userProgress.count({
     where: {
       userId,
-      status: 'COMPLETED'
-    }
+      status: 'COMPLETED',
+      quizScore: { gte: PASS_THRESHOLD },
+    },
   });
 
-  if (completedChapters < totalChapters) {
-    throw new Error(`You must complete all ${totalChapters} chapters to earn a certificate. You've completed ${completedChapters} so far.`);
+  if (completedChapters < totalChapters || totalChapters < TOTAL_CHAPTERS) {
+    throw new Error(`You must complete all ${totalChapters || TOTAL_CHAPTERS} chapters with ≥80% quiz scores. You've completed ${completedChapters} so far.`);
   }
 
   const certificateId = `AT-SQL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

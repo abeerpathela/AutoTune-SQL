@@ -31,7 +31,7 @@ export const Navbar = () => {
         { to: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
         { to: '/connections', icon: Database, label: 'Connections' },
         { to: '/optimizer', icon: Zap, label: 'Optimizer' },
-        { to: '/learn', icon: GraduationCap, label: 'Learn' },
+        { to: '/learn/chapter/1', icon: GraduationCap, label: 'Learn' },
         { to: '/certificates', icon: Award, label: 'Certificates' },
         ...(user.role === 'ADMIN'
           ? [{ to: '/ml-stats', icon: Shield, label: 'Admin' }]
@@ -43,7 +43,7 @@ export const Navbar = () => {
     hasToken && !user
       ? [
           { to: '/optimizer', icon: Zap, label: 'Optimizer' },
-          { to: '/learn', icon: GraduationCap, label: 'Learn' },
+          { to: '/learn/chapter/1', icon: GraduationCap, label: 'Learn' },
         ]
       : [];
 

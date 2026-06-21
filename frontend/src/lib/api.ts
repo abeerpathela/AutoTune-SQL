@@ -140,6 +140,20 @@ export const api = {
     const response = await apiClient.get('/v1/academy/courses');
     return response.data;
   },
+  async getAcademyCatalog(): Promise<Chapter[]> {
+    const response = await apiClient.get('/v1/academy/catalog');
+    return response.data;
+  },
+  async getChapterByOrder(order: number): Promise<Chapter> {
+    const response = await apiClient.get(`/v1/academy/chapters/by-order/${order}`);
+    return response.data;
+  },
+  async markChapterWatched(chapterId: string): Promise<void> {
+    await apiClient.post(`/v1/academy/progress/${chapterId}/watched`);
+  },
+  async markExerciseCompleted(chapterId: string): Promise<void> {
+    await apiClient.post(`/v1/academy/progress/${chapterId}/exercise`);
+  },
   async getCourseById(id: string): Promise<Course> {
     const response = await apiClient.get(`/v1/academy/courses/${id}`);
     return response.data;
@@ -197,7 +211,15 @@ export const api = {
     return response.data;
   },
 
-  async evaluateQuiz(quizId: string, answers: any[]): Promise<{ score: number; correct: number; total: number }> {
+  async evaluateQuiz(quizId: string, answers: number[]): Promise<{
+    score: number;
+    correct: number;
+    total: number;
+    passed: boolean;
+    passThreshold: number;
+    chapterCompleted: boolean;
+    nextChapterUnlocked: boolean;
+  }> {
     const response = await apiClient.post(`/v1/academy/quizzes/${quizId}/evaluate`, { answers });
     return response.data;
   },

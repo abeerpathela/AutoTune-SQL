@@ -1,350 +1,336 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { Check, Play, ChevronRight, Clock, Award, Download, X } from 'lucide-react';
-import { api } from '../lib/api';
+import Editor from '@monaco-editor/react';
+import {
+  Check,
+  Lock,
+  Play,
+  ChevronRight,
+  Sparkles,
+  FlaskConical,
+  ClipboardCheck,
+} from 'lucide-react';
 import { toast } from 'sonner';
-import type { Certificate } from '../types';
+import { api } from '../lib/api';
+import type { Chapter, QuizQuestion } from '../types';
 
-const DEFAULT_CHAPTERS = [
-  {
-    id: 'ch-1',
-    title: 'SQL Basics',
-    order: 1,
-    content: `# SQL Basics\n\nLearn foundational SELECT, WHERE, and ORDER BY patterns.\n\n\`\`\`sql\nSELECT name, email FROM users WHERE active = true ORDER BY created_at DESC;\n\`\`\``,
-  },
-  {
-    id: 'ch-2',
-    title: 'Joins',
-    order: 2,
-    content: `# Joins\n\nUnderstand INNER, LEFT, and RIGHT joins for relational queries.\n\n\`\`\`sql\nSELECT u.name, o.total FROM users u INNER JOIN orders o ON u.id = o.user_id;\n\`\`\``,
-  },
-  {
-    id: 'ch-3',
-    title: 'Aggregations',
-    order: 3,
-    content: `# Aggregations\n\nUse GROUP BY, HAVING, and aggregate functions effectively.\n\n\`\`\`sql\nSELECT category, COUNT(*) AS total FROM products GROUP BY category HAVING COUNT(*) > 5;\n\`\`\``,
-  },
-  {
-    id: 'ch-4',
-    title: 'Subqueries',
-    order: 4,
-    content: `# Subqueries\n\nNest queries for filtering and derived tables.\n\n\`\`\`sql\nSELECT * FROM orders WHERE user_id IN (SELECT id FROM users WHERE country = 'US');\n\`\`\``,
-  },
-  {
-    id: 'ch-5',
-    title: 'Optimization',
-    order: 5,
-    content: `# Optimization\n\nRead EXPLAIN plans and reduce full table scans.\n\n\`\`\`sql\nEXPLAIN ANALYZE SELECT * FROM orders WHERE status = 'pending';\n\`\`\``,
-  },
-  {
-    id: 'ch-6',
-    title: 'Transactions',
-    order: 6,
-    content: `# Transactions\n\nEnsure atomicity with BEGIN, COMMIT, and ROLLBACK.\n\n\`\`\`sql\nBEGIN;\nUPDATE accounts SET balance = balance - 100 WHERE id = 1;\nUPDATE accounts SET balance = balance + 100 WHERE id = 2;\nCOMMIT;\n\`\`\``,
-  },
-  {
-    id: 'ch-7',
-    title: 'Indexes',
-    order: 7,
-    content: `# Indexes\n\nCreate indexes to accelerate lookups and joins.\n\n\`\`\`sql\nCREATE INDEX idx_orders_status ON orders(status);\n\`\`\``,
-  },
-  {
-    id: 'ch-8',
-    title: 'Advanced',
-    order: 8,
-    content: `# Advanced SQL\n\nWindow functions, CTEs, and performance-aware patterns.\n\n\`\`\`sql\nWITH ranked AS (\n  SELECT *, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) AS rn\n  FROM orders\n)\nSELECT * FROM ranked WHERE rn = 1;\n\`\`\``,
-  },
-];
-
-const DEFAULT_COURSE = {
-  id: '1',
-  title: 'SQL Mastery Track',
-  description: 'Complete path from basics to advanced optimization',
-  chapters: DEFAULT_CHAPTERS,
-};
+const TOTAL_CHAPTERS = 30;
 
 export const Academy = () => {
-  const [courses, setCourses] = useState<any[]>([]);
-  const [selectedChapter, setSelectedChapter] = useState<any>(null);
-  const [userProgress, setUserProgress] = useState<any[]>([]);
-  const [localCompleted, setLocalCompleted] = useState<string[]>([]);
+  const { order } = useParams<{ order?: string }>();
+  const navigate = useNavigate();
+  const chapterOrder = order ? parseInt(order, 10) : 1;
+
+  const [catalog, setCatalog] = useState<Chapter[]>([]);
+  const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
+  const [practiceSql, setPracticeSql] = useState('');
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
+  const [submittingQuiz, setSubmittingQuiz] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
-  const [showCertModal, setShowCertModal] = useState(false);
-  const [generatedCert, setGeneratedCert] = useState<Certificate | null>(null);
+
+  const loadCatalog = useCallback(async () => {
+    const data = await api.getAcademyCatalog();
+    setCatalog(data);
+    return data;
+  }, []);
+
+  const loadChapter = useCallback(
+    async (globalOrder: number) => {
+      try {
+        const chapter = await api.getChapterByOrder(globalOrder);
+        setActiveChapter(chapter);
+        setPracticeSql(chapter.practiceSql || 'SELECT 1;');
+        setQuizAnswers({});
+        if (!chapter.progress?.isWatched) {
+          await api.markChapterWatched(chapter.id);
+        }
+      } catch (err: unknown) {
+        const axiosErr = err as { response?: { status?: number; data?: { redirectOrder?: number } } };
+        if (axiosErr.response?.status === 403) {
+          const redirect = axiosErr.response.data?.redirectOrder ?? Math.max(1, globalOrder - 1);
+          toast.error('Please complete previous chapters first.');
+          navigate(`/learn/chapter/${redirect}`, { replace: true });
+        }
+        throw err;
+      }
+    },
+    [navigate]
+  );
 
   useEffect(() => {
-    const fetchData = async () => {
+    const init = async () => {
+      setLoading(true);
       try {
-        const [coursesData, progressData] = await Promise.all([
-          api.getCourses(),
-          api.getProgressDetails().catch(() => []),
-        ]);
-
-        if (coursesData.length > 0 && coursesData[0].chapters?.length >= 8) {
-          setCourses(coursesData);
-          setSelectedChapter(coursesData[0].chapters[0]);
-        } else {
-          setCourses([DEFAULT_COURSE]);
-          setSelectedChapter(DEFAULT_CHAPTERS[0]);
+        await loadCatalog();
+        if (!order) {
+          navigate('/learn/chapter/1', { replace: true });
+          return;
         }
-        setUserProgress(progressData);
+        await loadChapter(chapterOrder);
       } catch (err) {
-        console.error('Failed to fetch academy data:', err);
-        setCourses([DEFAULT_COURSE]);
-        setSelectedChapter(DEFAULT_CHAPTERS[0]);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
+    init();
+  }, [chapterOrder, order, navigate, loadCatalog, loadChapter]);
 
-    fetchData();
-  }, []);
-
-  const allChapters = courses.flatMap((c) => c.chapters || []);
-  const totalChapters = allChapters.length;
-
-  const isChapterCompleted = (chapterId: string) => {
-    return (
-      localCompleted.includes(chapterId) ||
-      userProgress.some((p) => p.chapterId === chapterId && p.status === 'COMPLETED')
-    );
+  const handleSelectChapter = (ch: Chapter) => {
+    if (!ch.progress?.isUnlocked) {
+      toast.error('Complete the previous chapter quiz (≥80%) to unlock.');
+      return;
+    }
+    navigate(`/learn/chapter/${ch.globalOrder}`);
   };
 
-  const completedChapters = allChapters.filter((ch) => isChapterCompleted(ch.id));
-
-  const checkCompletion = () => completedChapters.length === totalChapters && totalChapters > 0;
-
-  const markChapterComplete = async () => {
-    if (!selectedChapter) return;
+  const handleMarkExercise = async () => {
+    if (!activeChapter) return;
     try {
-      await api.updateProgress(selectedChapter.id, 'COMPLETED');
-      const newProgress = await api.getProgressDetails();
-      setUserProgress(newProgress);
+      await api.markExerciseCompleted(activeChapter.id);
+      toast.success('Practice lab marked complete!');
+      await loadCatalog();
+      await loadChapter(chapterOrder);
     } catch {
-      setLocalCompleted((prev) =>
-        prev.includes(selectedChapter.id) ? prev : [...prev, selectedChapter.id]
-      );
+      toast.error('Failed to save exercise progress');
     }
   };
 
-  const handleGenerateCertificate = async () => {
-    if (!checkCompletion()) {
-      toast.error('Complete all chapters before generating a certificate');
+  const handleSubmitQuiz = async () => {
+    if (!activeChapter?.quiz?.questions && !activeChapter?.quizId) return;
+    const questions: QuizQuestion[] = activeChapter.quiz?.questions || [];
+    if (questions.length === 0) return;
+
+    const answers = questions.map((_, i) => quizAnswers[i] ?? -1);
+    if (answers.some((a) => a < 0)) {
+      toast.error('Please answer all 20 questions before submitting.');
       return;
     }
 
-    setGenerating(true);
+    setSubmittingQuiz(true);
     try {
-      const cert = await api.generateCertificate('SQL Optimization Fundamentals');
-      setGeneratedCert(cert);
-      setShowCertModal(true);
-      toast.success('Certificate generated successfully!');
-    } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        (err as Error)?.message ||
-        'Failed to generate certificate';
-      toast.error(message);
+      const quizId = activeChapter.quiz?.id || activeChapter.quizId!;
+      const result = await api.evaluateQuiz(quizId, answers);
+      if (result.passed) {
+        toast.success(`Quiz passed with ${result.score}%! Next chapter unlocked.`);
+        await loadCatalog();
+        if (result.nextChapterUnlocked && chapterOrder < TOTAL_CHAPTERS) {
+          navigate(`/learn/chapter/${chapterOrder + 1}`);
+        }
+      } else {
+        toast.error(`Score ${result.score}% — need ${result.passThreshold}% to pass.`);
+        await loadCatalog();
+        await loadChapter(chapterOrder);
+      }
+    } catch {
+      toast.error('Quiz submission failed');
     } finally {
-      setGenerating(false);
+      setSubmittingQuiz(false);
     }
   };
 
-  if (loading) {
+  if (loading || !activeChapter) {
     return (
       <div className="space-y-8">
         <div className="animate-shimmer h-12 w-64 bg-zinc-800/40 rounded-xl" />
         <div className="grid lg:grid-cols-4 gap-6">
-          <div className="animate-shimmer h-96 bg-zinc-800/40 rounded-2xl" />
-          <div className="lg:col-span-3 animate-shimmer h-96 bg-zinc-800/40 rounded-2xl" />
+          <div className="animate-shimmer h-[600px] bg-zinc-800/40 rounded-2xl" />
+          <div className="lg:col-span-3 animate-shimmer h-[600px] bg-zinc-800/40 rounded-2xl" />
         </div>
       </div>
     );
   }
 
+  const questions: QuizQuestion[] = activeChapter.quiz?.questions || [];
+  const completedCount = catalog.filter((c) => c.progress?.isCompleted).length;
+
   return (
-    <div className="space-y-8">
-      <div>
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-4xl font-bold text-zinc-100 mb-2"
-        >
-          SQL Academy
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-lg text-zinc-400"
-        >
-          Master SQL optimization — {completedChapters.length}/{totalChapters} chapters complete
-        </motion.p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <p className="text-sm text-violet-400 font-medium">{activeChapter.moduleTitle}</p>
+          <h1 className="text-3xl font-bold text-zinc-100 mt-1">SQL Academy · Lecture Hall</h1>
+          <p className="text-zinc-400 mt-1">
+            Chapter {activeChapter.globalOrder} of {TOTAL_CHAPTERS} · {completedCount} completed
+          </p>
+        </div>
+        <div className="w-full sm:w-64">
+          <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-violet-500 transition-all"
+              style={{ width: `${(completedCount / TOTAL_CHAPTERS) * 100}%` }}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="lg:col-span-1 flex flex-col"
-        >
-          <div className="space-y-6 flex-1">
-            {courses.map((course) => (
-              <div key={course.id} className="space-y-2">
-                <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider">
-                  {course.title}
-                </h3>
-                <div className="space-y-1">
-                  {course.chapters.map((chapter: any) => {
-                    const isCompleted = isChapterCompleted(chapter.id);
-                    const isActive = selectedChapter?.id === chapter.id;
+        {/* Sidebar stepper */}
+        <aside className="lg:col-span-1 max-h-[80vh] overflow-y-auto pr-1 space-y-4">
+          {Array.from(new Set(catalog.map((c) => c.moduleTitle))).map((moduleTitle) => (
+            <div key={moduleTitle}>
+              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 px-2">
+                {moduleTitle}
+              </h3>
+              <div className="space-y-1">
+                {catalog
+                  .filter((c) => c.moduleTitle === moduleTitle)
+                  .map((ch) => {
+                    const unlocked = ch.progress?.isUnlocked ?? ch.globalOrder === 1;
+                    const completed = ch.progress?.isCompleted;
+                    const isActive = ch.globalOrder === activeChapter.globalOrder;
 
                     return (
                       <button
-                        key={chapter.id}
-                        onClick={() => setSelectedChapter(chapter)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
+                        key={ch.id}
+                        onClick={() => handleSelectChapter(ch)}
+                        disabled={!unlocked}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                           isActive
                             ? 'bg-violet-500/20 border border-violet-500/40 text-violet-200'
-                            : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40'
+                            : unlocked
+                            ? 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'
+                            : 'text-zinc-600 cursor-not-allowed opacity-60'
                         }`}
                       >
-                        {isCompleted ? (
-                          <Check className="w-5 h-5 flex-shrink-0 text-emerald-400" />
+                        {completed ? (
+                          <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                        ) : unlocked ? (
+                          <Play className="w-4 h-4 flex-shrink-0" />
                         ) : (
-                          <Play className="w-5 h-5 flex-shrink-0" />
+                          <Lock className="w-4 h-4 flex-shrink-0" />
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium truncate ${isActive ? 'text-violet-200' : ''}`}>
-                            {chapter.title}
-                          </p>
-                          <p className="text-xs text-zinc-500">Chapter {chapter.order}</p>
+                          <p className="text-xs font-medium truncate">{ch.globalOrder}. {ch.title}</p>
+                          {ch.progress?.quizScore != null && (
+                            <p className="text-[10px] text-zinc-500">Quiz: {ch.progress.quizScore}%</p>
+                          )}
                         </div>
                         {isActive && <ChevronRight className="w-4 h-4" />}
                       </button>
                     );
                   })}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {checkCompletion() && (
-            <button
-              onClick={handleGenerateCertificate}
-              disabled={generating}
-              className="mt-6 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-zinc-900 font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity"
-            >
-              {generating ? (
-                <div className="w-4 h-4 border-2 border-zinc-900/30 border-t-zinc-900 rounded-full animate-spin" />
-              ) : (
-                <Award className="w-5 h-5" />
-              )}
-              {generating ? 'Generating...' : 'Generate Certificate'}
-            </button>
-          )}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="lg:col-span-3"
-        >
-          {selectedChapter ? (
-            <div className="spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-8">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <span className="text-sm text-zinc-500">Chapter {selectedChapter.order}</span>
-                  <h2 className="text-3xl font-bold text-zinc-100 mt-1">{selectedChapter.title}</h2>
-                </div>
-                {!isChapterCompleted(selectedChapter.id) && (
-                  <button
-                    onClick={markChapterComplete}
-                    className="px-5 py-2.5 rounded-xl bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors flex items-center gap-2"
-                  >
-                    <Check className="w-4 h-4" />
-                    Mark as Complete
-                  </button>
-                )}
-              </div>
-
-              <div className="prose prose-invert prose-zinc max-w-none">
-                <ReactMarkdown
-                  components={{
-                    h1: ({ ...props }) => <h1 className="text-2xl font-bold text-zinc-100 mb-4" {...props} />,
-                    h2: ({ ...props }) => <h2 className="text-xl font-semibold text-zinc-100 mt-8 mb-3" {...props} />,
-                    p: ({ ...props }) => <p className="text-zinc-400 mb-4 leading-relaxed" {...props} />,
-                    code: ({ className, children, ...props }) => {
-                      const match = /language-(\w+)/.exec(className || '');
-                      return match ? (
-                        <pre className="bg-zinc-800/70 border border-zinc-700/60 rounded-xl p-4 overflow-x-auto my-4">
-                          <code className={`font-mono text-sm text-zinc-200 ${className}`} {...props}>
-                            {children}
-                          </code>
-                        </pre>
-                      ) : (
-                        <code className="bg-zinc-800/70 text-amber-300 px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
-                          {children}
-                        </code>
-                      );
-                    },
-                  }}
-                >
-                  {selectedChapter.content}
-                </ReactMarkdown>
               </div>
             </div>
-          ) : (
-            <div className="spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-12 text-center">
-              <Clock className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-zinc-100 mb-2">Select a Chapter</h3>
-              <p className="text-zinc-400">Choose a chapter from the sidebar to start learning</p>
-            </div>
-          )}
-        </motion.div>
-      </div>
+          ))}
+        </aside>
 
-      <AnimatePresence>
-        {showCertModal && generatedCert && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-md rounded-2xl border border-zinc-700/60 bg-zinc-900 p-8 text-center relative"
-            >
+        {/* Main lecture hall */}
+        <main className="lg:col-span-3 space-y-6">
+          {/* Video */}
+          <section className="rounded-2xl overflow-hidden border border-zinc-800/60 bg-black aspect-video">
+            {activeChapter.videoUrl ? (
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${activeChapter.videoUrl}?rel=0`}
+                title={activeChapter.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-zinc-500">No video available</div>
+            )}
+          </section>
+
+          <h2 className="text-2xl font-bold text-zinc-100">{activeChapter.title}</h2>
+
+          {/* AI Summary */}
+          <section className="relative rounded-2xl border-2 border-violet-500/30 bg-gradient-to-br from-violet-950/40 to-zinc-900/60 p-6">
+            <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-violet-500 text-xs font-semibold text-white flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              Generated by AutoTune-AI
+            </div>
+            <div className="prose prose-invert prose-sm max-w-none mt-2">
+              <ReactMarkdown>{activeChapter.content}</ReactMarkdown>
+            </div>
+          </section>
+
+          {/* Practice Lab */}
+          <section className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FlaskConical className="w-5 h-5 text-cyan-400" />
+                <h3 className="text-lg font-semibold text-zinc-100">Practice Lab</h3>
+              </div>
               <button
-                onClick={() => setShowCertModal(false)}
-                className="absolute top-4 right-4 p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+                onClick={handleMarkExercise}
+                disabled={activeChapter.progress?.exerciseCompleted}
+                className="px-4 py-2 rounded-xl bg-cyan-500/20 text-cyan-300 text-sm font-medium hover:bg-cyan-500/30 disabled:opacity-50"
               >
-                <X className="w-5 h-5" />
+                {activeChapter.progress?.exerciseCompleted ? 'Exercise Complete ✓' : 'Mark Exercise Done'}
               </button>
-              <Award className="w-16 h-16 text-amber-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-zinc-100 mb-2">Certificate Earned!</h3>
-              <p className="text-zinc-400 mb-6">
-                You completed all {totalChapters} chapters. Your certificate is ready.
+            </div>
+            <div className="h-48 rounded-xl overflow-hidden border border-zinc-700/60">
+              <Editor
+                height="100%"
+                defaultLanguage="sql"
+                theme="vs-dark"
+                value={practiceSql}
+                onChange={(v) => setPracticeSql(v || '')}
+                options={{ minimap: { enabled: false }, fontSize: 13, wordWrap: 'on' }}
+              />
+            </div>
+          </section>
+
+          {/* Quiz */}
+          {questions.length > 0 && !activeChapter.progress?.isCompleted && (
+            <section className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <ClipboardCheck className="w-5 h-5 text-amber-400" />
+                <h3 className="text-lg font-semibold text-zinc-100">Chapter Quiz ({questions.length} questions)</h3>
+                <span className="text-xs text-zinc-500 ml-auto">Pass threshold: 80%</span>
+              </div>
+              <div className="space-y-6 max-h-[480px] overflow-y-auto pr-2">
+                {questions.map((q, qi) => (
+                  <div key={q.id} className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/40">
+                    <p className="text-sm font-medium text-zinc-200 mb-3">
+                      {qi + 1}. {q.question}
+                    </p>
+                    <div className="space-y-2">
+                      {q.options.map((opt, oi) => (
+                        <label
+                          key={oi}
+                          className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors ${
+                            quizAnswers[qi] === oi
+                              ? 'bg-violet-500/20 border border-violet-500/40'
+                              : 'hover:bg-zinc-700/30 border border-transparent'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name={`q-${qi}`}
+                            checked={quizAnswers[qi] === oi}
+                            onChange={() => setQuizAnswers((prev) => ({ ...prev, [qi]: oi }))}
+                            className="accent-violet-500"
+                          />
+                          <span className="text-sm text-zinc-300">{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={handleSubmitQuiz}
+                disabled={submittingQuiz}
+                className="mt-6 w-full py-3 rounded-xl bg-violet-500 text-white font-semibold hover:bg-violet-600 disabled:opacity-50"
+              >
+                {submittingQuiz ? 'Submitting...' : 'Submit Quiz'}
+              </button>
+            </section>
+          )}
+
+          {activeChapter.progress?.isCompleted && (
+            <div className="p-6 rounded-2xl border border-emerald-500/40 bg-emerald-950/20 text-center">
+              <Check className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
+              <p className="text-emerald-200 font-semibold">
+                Chapter completed · Quiz score: {activeChapter.progress.quizScore}%
               </p>
-              <p className="text-xs text-zinc-500 font-mono mb-6 break-all">{generatedCert.certificateId}</p>
-              <button
-                onClick={() => api.downloadCertificate(generatedCert.id)}
-                className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-violet-500 text-white font-semibold hover:bg-violet-600 transition-colors"
-              >
-                <Download className="w-5 h-5" />
-                Download PDF
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };
