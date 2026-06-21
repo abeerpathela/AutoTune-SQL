@@ -7,6 +7,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String          @id @default(uuid())
+  email        String          @unique
+  password     String?
+  githubId     String?         @unique
+  role         Role            @default(USER)
+  avatar       String?
+  isVerified   Boolean         @default(false)
+  firstName    String?
+  lastName     String?
+  queryLogs    QueryLog[]
+  dbConnections DbConnection[]
+  progress     UserProgress[]
+  quizResults  QuizResult[]
+  certificates Certificate[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@map("users")
+}
+
 model DbConnection {
   id          String     @id @default(uuid())
   name        String
@@ -16,6 +37,8 @@ model DbConnection {
   username    String
   password    String
   createdAt   DateTime   @default(now())
+  userId      String?
+  user        User?      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   queryLogs   QueryLog[]
 
   @@map("db_connections")
@@ -36,6 +59,8 @@ model QueryLog {
   explanation      String?
   connectionId     String?
   connection       DbConnection?  @relation(fields: [connectionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId           String?
+  user             User?          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   createdAt        DateTime       @default(now())
 }
 
@@ -53,40 +78,82 @@ model MLModelStats {
   updatedAt         DateTime @updatedAt
 }
 
-model orders {
-  id         Int       @id @default(autoincrement())
-  user_id    Int
-  product_id Int
-  quantity   Int?
-  total      Decimal?  @db.Decimal(10, 2)
-  status     String?   @db.VarChar(50)
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  products   products  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users      users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@index([user_id], map: "idx_orders_user_id")
-}
-
-model products {
-  id          Int       @id @default(autoincrement())
-  name        String    @db.VarChar(255)
+model Course {
+  id        String    @id @default(uuid())
+  title     String
   description String?
-  price       Decimal?  @db.Decimal(10, 2)
-  category    String?   @db.VarChar(100)
-  created_at  DateTime? @default(now()) @db.Timestamp(6)
-  orders      orders[]
-
-  @@index([id], map: "idx_products_id")
+  chapters Chapter[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
-model users {
-  id         Int       @id @default(autoincrement())
-  email      String    @db.VarChar(255)
-  first_name String?   @db.VarChar(100)
-  last_name  String?   @db.VarChar(100)
-  address    String?
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  orders     orders[]
+model Chapter {
+  id        String    @id @default(uuid())
+  title     String
+  content   String
+  order     Int
+  courseId  String
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  quiz      Quiz?
+  progress  UserProgress[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  @@index([id], map: "idx_users_id")
+  @@unique([courseId, order])
+}
+
+model Quiz {
+  id          String       @id @default(uuid())
+  chapterId   String       @unique
+  chapter     Chapter      @relation(fields: [chapterId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  questions   Json
+  results     QuizResult[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model UserProgress {
+  id        String          @id @default(uuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  chapterId String
+  chapter   Chapter         @relation(fields: [chapterId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  status    ProgressStatus  @default(IN_PROGRESS)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@unique([userId, chapterId])
+}
+
+model QuizResult {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  quizId    String
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  score     Float
+  createdAt DateTime @default(now())
+
+  @@unique([userId, quizId])
+}
+
+model Certificate {
+  id              String   @id @default(uuid())
+  certificateId   String   @unique
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  type            String
+  issueDate       DateTime @default(now())
+  verificationLink String
+  createdAt       DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ProgressStatus {
+  IN_PROGRESS
+  COMPLETED
 }

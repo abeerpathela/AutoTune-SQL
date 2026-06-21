@@ -1,4 +1,3 @@
-import React from 'react';
 import type { QueryLog } from '../types.js';
 import { Zap, CheckCircle2, AlertCircle, XCircle, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

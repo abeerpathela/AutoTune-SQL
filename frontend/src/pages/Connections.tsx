@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Database, Trash2, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Database, Trash2, CheckCircle2, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { DbConnection } from '../types';
 import { toast } from 'sonner';

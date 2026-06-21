@@ -29,10 +29,10 @@ describe('POST /api/queries/analyze', () => {
       .post('/api/queries/analyze')
       .send({ sql: 'SELEC * FROM users' });
 
-    expect(response.status).toBe(200); // Our analyzer returns 200 even with syntax errors
-    expect(response.body.status).toBe('success');
-    expect(response.body.data.analysis.errorCategory).toBe('Syntax');
-    expect(response.body.data.analysis.isSyntaxValid).toBe(false);
+    expect(response.status).toBe(400);
+    expect(response.body.status).toBe('error');
+    expect(response.body.errorCategory).toBe('Syntax');
+    expect(response.body.message).toBeDefined();
   });
 
   it('should detect suspicious Logic joins and classify them', async () => {

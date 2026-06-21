@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { QueryTable } from '../components/QueryTable';
 import type { QueryLog } from '../types.js';
 import { api } from '../lib/api';

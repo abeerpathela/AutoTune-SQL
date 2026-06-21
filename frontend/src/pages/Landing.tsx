@@ -1,11 +1,10 @@
-import React, { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Database, Zap, Code, BarChart2, Menu, X } from 'lucide-react';
-import Logo from '../assets/WEBSITE_LOGO.png';
+import React, { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Database, Zap, Code, BarChart2 } from 'lucide-react';
 import { MagneticButton } from '../components/ui/InteractionLayer';
 
-const FeatureCard = ({ icon: Icon, title, description }: { icon: any, title: string, description: string }) => {
+const FeatureCard = ({ icon: Icon, title, description }: { icon: any; title: string; description: string }) => {
   const ref = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -28,7 +27,7 @@ const FeatureCard = ({ icon: Icon, title, description }: { icon: any, title: str
       <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-700/60 bg-zinc-800/60">
         <Icon className="h-6 w-6 text-zinc-100" />
       </div>
-      <h3 className="mb-2 text-lg font-semibold text-zinc-50">{title}</h3>
+      <h3 className="mb-2 text-lg font-semibold text-zinc-100">{title}</h3>
       <p className="text-sm leading-relaxed text-zinc-400">{description}</p>
     </motion.div>
   );
@@ -122,103 +121,14 @@ const DatabaseSchemaGraphic = () => {
   );
 };
 
-const Navbar = () => {
-  const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  return (
-    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
-      <motion.div
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="flex items-center gap-6 rounded-full border border-zinc-800/60 bg-zinc-900/60 backdrop-blur-xl px-6 py-3 shadow-2xl"
-      >
-        {/* Brand Section (Anchor) */}
-        <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-          <img
-            src={Logo}
-            alt="AutoTune-SQL"
-            className="h-9 w-auto"
-          />
-          <div className="hidden sm:flex flex-col">
-            <span className="text-base font-semibold tracking-tight text-zinc-50">
-              AutoTune-SQL
-            </span>
-            <span className="text-xs text-zinc-400 leading-tight">
-              AI SQL Query Optimizer
-            </span>
-          </div>
-        </Link>
-
-        <div className="h-7 w-px bg-zinc-800/60" />
-
-        {/* Desktop Nav Items */}
-        <div className="hidden md:flex items-center gap-2">
-          <MagneticButton variant="secondary" onClick={() => navigate('/dashboard')}>
-            Dashboard
-          </MagneticButton>
-          <MagneticButton onClick={() => navigate('/studio')}>
-            Open Studio
-          </MagneticButton>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </motion.div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-24 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md"
-          >
-            <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/60 rounded-2xl p-4 shadow-2xl">
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => {
-                    navigate('/dashboard');
-                    setMobileMenuOpen(false);
-                  }}
-                  className="px-4 py-2.5 rounded-xl bg-zinc-800/70 text-zinc-50 border border-zinc-700/60 text-sm font-medium"
-                >
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => {
-                    navigate('/studio');
-                    setMobileMenuOpen(false);
-                  }}
-                  className="px-4 py-2.5 rounded-xl bg-zinc-50 text-zinc-900 text-sm font-semibold"
-                >
-                  Open Studio
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
 export const Landing = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col relative z-1">
-      <Navbar />
-
+    <div className="min-h-screen flex flex-col relative z-10">
       {/* Hero */}
-      <section className="flex-1 flex items-center pt-20 pb-24">
-        <div className="max-w-7xl mx-auto px-6 w-full">
+      <section className="flex-1 flex items-center pb-24">
+        <div className="max-w-7xl mx-auto w-full">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
               <motion.div
@@ -236,7 +146,7 @@ export const Landing = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-zinc-50"
+                className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-zinc-100"
               >
                 Engineering-grade
                 <br />
@@ -262,7 +172,7 @@ export const Landing = () => {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="flex flex-wrap items-center gap-4"
               >
-                <MagneticButton onClick={() => navigate('/studio')}>
+                <MagneticButton onClick={() => navigate('/optimizer')}>
                   Get Started
                 </MagneticButton>
                 <MagneticButton variant="secondary" onClick={() => navigate('/dashboard')}>
@@ -298,7 +208,7 @@ export const Landing = () => {
 
       {/* Features */}
       <section className="pb-32">
-        <div className="max-w-7xl mx-auto px-6 w-full">
+        <div className="max-w-7xl mx-auto w-full">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FeatureCard
               icon={Database}

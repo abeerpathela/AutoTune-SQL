@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Zap,
@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Logo from '../../assets/WEBSITE_LOGO.png';
+import Logo from '../../assets/WEBSITE_LOGO.svg';
 
 const NavItem = ({
   to,
@@ -38,7 +38,6 @@ const NavItem = ({
 
 export const Shell = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [

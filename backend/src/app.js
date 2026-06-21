@@ -2,15 +2,21 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const session = require('express-session');
 require('dotenv').config();
 
 const queryRoutes = require('./routes/queryRoutes');
 const optimizationRoutes = require('./routes/optimizationRoutes');
 const mlRoutes = require('./routes/mlRoutes');
 const connectionRoutes = require('./routes/connectionRoutes');
+const authRoutes = require('./routes/authRoutes');
+const academyRoutes = require('./routes/academyRoutes');
+const certRoutes = require('./routes/certRoutes');
 const getRedisClient = require('./config/redis');
 const { initializeMLService } = require('./services/mlService');
-require('./services/aiService'); // Import to run startup validation
+const { protect } = require('./middleware/auth');
+require('./config/passport');
+require('./services/aiService');
 
 const app = express();
 
@@ -23,6 +29,10 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(session({ secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key', resave: false, saveUninitialized: false }));
+const passport = require('./config/passport');
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
@@ -33,11 +43,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API Routes
-app.use('/api/queries', queryRoutes);
-app.use('/api/optimize', optimizationRoutes);
-app.use('/api/ml', mlRoutes);
-app.use('/api/connections', connectionRoutes);
+// API Routes — public auth + health only; everything else requires JWT
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/academy', protect, academyRoutes);
+app.use('/api/v1/certificates', certRoutes);
+app.use('/api/v1/queries', protect, queryRoutes);
+app.use('/api/queries', protect, queryRoutes);
+app.use('/api/optimize', protect, optimizationRoutes);
+app.use('/api/ml', protect, mlRoutes);
+app.use('/api/connections', protect, connectionRoutes);
 
 // Centralized Error Handler
 app.use((err, req, res, next) => {

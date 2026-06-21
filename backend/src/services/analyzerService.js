@@ -2,10 +2,13 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { detectLogicFlaws } = require('./logicAnalyzer');
 const { runExplain } = require('./dbConnector');
+const {
+  cleanSqlForValidation,
+  isReadOnlyQuery,
+  findDangerousKeyword,
+} = require('../utils/sqlCleaner');
+const { classifyPostgresError } = require('../utils/postgresErrorClassifier');
 
-const DANGEROUS_KEYWORDS = ['DROP', 'DELETE', 'TRUNCATE', 'ALTER', 'CREATE', 'INSERT', 'UPDATE', 'GRANT', 'REVOKE'];
-
-// Recursively count occurrences of node types
 function countNodes(plan, targetTypes) {
   let count = 0;
   if (plan['Node Type']) {
@@ -23,22 +26,56 @@ function countNodes(plan, targetTypes) {
   return count;
 }
 
-// Main analyze function - STRINGENT priority order
+function buildErrorAnalysis(originalQuery, classified) {
+  return {
+    originalQuery,
+    explainPlan: null,
+    executionTime: null,
+    planRows: 0,
+    actualRows: 0,
+    startupCost: 0,
+    totalCost: 0,
+    nodeType: null,
+    hasSequentialScan: false,
+    roundTripTime: 0,
+    joinTypeCount: 0,
+    isSyntaxValid: classified.isSyntaxValid,
+    errorCategory: classified.errorCategory,
+    errorCode: classified.code,
+    message: classified.message,
+    errorHint: classified.hint,
+    postgresError: classified.message,
+    structuredError: {
+      errorCategory: classified.errorCategory,
+      message: classified.message,
+      code: classified.code,
+      hint: classified.hint,
+    },
+    logicFlaws: [],
+  };
+}
+
 async function analyzeQuery(sql, connectionId = null) {
-  const sanitized = sql.trim();
-  
-  // Check dangerous first
-  const upperSql = sanitized.toUpperCase();
-  for (const keyword of DANGEROUS_KEYWORDS) {
-    if (upperSql.includes(keyword)) {
-      throw new Error('Dangerous SQL operations are not allowed.');
-    }
+  const originalQuery = typeof sql === 'string' ? sql.trim() : '';
+  const cleanedSql = cleanSqlForValidation(originalQuery);
+
+  if (!cleanedSql) {
+    throw new Error('SQL query is required');
+  }
+
+  const dangerousKeyword = findDangerousKeyword(cleanedSql);
+  if (dangerousKeyword) {
+    throw new Error('Dangerous SQL operations are not allowed.');
+  }
+
+  if (!isReadOnlyQuery(cleanedSql)) {
+    throw new Error('Only SELECT, WITH, or EXPLAIN queries are allowed.');
   }
 
   let connectionConfig = null;
   if (connectionId) {
     const connection = await prisma.dbConnection.findUnique({
-      where: { id: connectionId }
+      where: { id: connectionId },
     });
     if (!connection) {
       throw new Error('Database connection not found');
@@ -46,56 +83,31 @@ async function analyzeQuery(sql, connectionId = null) {
     connectionConfig = connection;
   }
 
-  // ---------------------------
-  // Step 1: Syntax Check FIRST
-  // ---------------------------
   let explainPlan = null;
   let fullExplainPlan = null;
-  let isSyntaxValid = true;
-  let postgresError = null;
-  
+
   try {
     if (connectionConfig) {
-      const explainResult = await runExplain(connectionConfig, sanitized);
+      const explainResult = await runExplain(connectionConfig, originalQuery);
       explainPlan = explainResult.explainPlan;
       fullExplainPlan = explainResult.fullExplainPlan;
     } else {
-      const explainResult = await prisma.$queryRawUnsafe(`EXPLAIN (FORMAT JSON) ${sanitized}`);
+      const explainResult = await prisma.$queryRawUnsafe(`EXPLAIN (FORMAT JSON) ${originalQuery}`);
       explainPlan = explainResult[0]['QUERY PLAN'][0];
     }
   } catch (err) {
-    isSyntaxValid = false;
-    postgresError = err.message;
-    console.log(`📝 Detected Syntax Error: ${err.message}`);
-    return {
-      originalQuery: sanitized,
-      explainPlan: null,
-      executionTime: null,
-      planRows: 0,
-      actualRows: 0,
-      startupCost: 0,
-      totalCost: 0,
-      nodeType: null,
-      hasSequentialScan: false,
-      roundTripTime: 0,
-      joinTypeCount: 0,
-      isSyntaxValid: false,
-      errorCategory: 'Syntax',
-      postgresError: err.message,
-      logicFlaws: []
-    };
+    const classified = classifyPostgresError(err);
+    console.log(`📝 Classified DB Error [${classified.code}]: ${classified.message}`);
+    return buildErrorAnalysis(originalQuery, classified);
   }
 
-  // ---------------------------
-  // Step 2: Logic Check NEXT
-  // ---------------------------
-  console.log(`🔍 Running Logic Check on query...`);
-  const logicFlaws = detectLogicFlaws(sanitized);
+  console.log('🔍 Running Logic Check on query...');
+  const logicFlaws = detectLogicFlaws(originalQuery);
   if (logicFlaws.length > 0) {
     console.log(`✅ Classified as Logic Error, ${logicFlaws.length} flaws found`);
     const plan = explainPlan.Plan;
     return {
-      originalQuery: sanitized,
+      originalQuery,
       explainPlan,
       executionTime: null,
       planRows: plan['Plan Rows'] || 0,
@@ -109,14 +121,11 @@ async function analyzeQuery(sql, connectionId = null) {
       isSyntaxValid: true,
       errorCategory: 'Logic',
       postgresError: null,
-      logicFlaws
+      logicFlaws,
     };
   }
 
-  // ---------------------------
-  // Step 3: Performance Check LAST
-  // ---------------------------
-  console.log(`🚀 Running Performance Check on query...`);
+  console.log('🚀 Running Performance Check on query...');
   try {
     let plan = null;
     let actualTotalTime = null;
@@ -127,7 +136,9 @@ async function analyzeQuery(sql, connectionId = null) {
       actualTotalTime = fullExplainPlan['Execution Time'] || plan['Actual Total Time'];
     } else {
       const startTime = process.hrtime();
-      const fullExplainResult = await prisma.$queryRawUnsafe(`EXPLAIN (FORMAT JSON, ANALYZE) ${sanitized}`);
+      const fullExplainResult = await prisma.$queryRawUnsafe(
+        `EXPLAIN (FORMAT JSON, ANALYZE) ${originalQuery}`
+      );
       const [seconds, nanoseconds] = process.hrtime(startTime);
       roundTripTime = seconds * 1000 + nanoseconds / 1000000;
       fullExplainPlan = fullExplainResult[0]['QUERY PLAN'][0];
@@ -143,7 +154,7 @@ async function analyzeQuery(sql, connectionId = null) {
 
     console.log(`✅ Classified as Performance Query, isSlow: ${isSlow}`);
     return {
-      originalQuery: sanitized,
+      originalQuery,
       explainPlan: fullExplainPlan,
       executionTime: actualTotalTime,
       planRows,
@@ -158,27 +169,12 @@ async function analyzeQuery(sql, connectionId = null) {
       errorCategory: 'Performance',
       postgresError: null,
       logicFlaws: [],
-      isSlow
+      isSlow,
     };
   } catch (perfErr) {
-    console.log(`⚠️ Performance Check failed, falling back to Unknown category`);
-    return {
-      originalQuery: sanitized,
-      explainPlan,
-      executionTime: null,
-      planRows: explainPlan.Plan['Plan Rows'] || 0,
-      actualRows: 0,
-      startupCost: explainPlan.Plan['Startup Cost'] || 0,
-      totalCost: explainPlan.Plan['Total Cost'] || 0,
-      nodeType: explainPlan.Plan['Node Type'],
-      hasSequentialScan: countNodes(explainPlan.Plan, ['Seq Scan']) > 0,
-      roundTripTime: 0,
-      joinTypeCount: countNodes(explainPlan.Plan, ['Hash Join', 'Nested Loop', 'Merge Join']),
-      isSyntaxValid: true,
-      errorCategory: 'Unknown',
-      postgresError: perfErr.message,
-      logicFlaws: []
-    };
+    const classified = classifyPostgresError(perfErr);
+    console.log(`⚠️ Performance Check failed [${classified.code}]: ${classified.message}`);
+    return buildErrorAnalysis(originalQuery, classified);
   }
 }
 

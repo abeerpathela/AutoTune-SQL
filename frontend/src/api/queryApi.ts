@@ -1,6 +1,7 @@
 import type { QueryLog } from '../types.js';
+import { config } from '../lib/config';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = config.apiBaseUrl;
 
 export interface AnalysisResponse {
   status: string;

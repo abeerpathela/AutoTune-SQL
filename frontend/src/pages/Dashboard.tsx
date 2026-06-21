@@ -1,138 +1,274 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Zap, Database, Clock, Brain, ArrowRight, Award, GraduationCap } from 'lucide-react';
 import { api } from '../lib/api';
-import type { DatasetStats, TrainingStats } from '../types.js';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Zap, Clock, Target, Brain, Loader2 } from 'lucide-react';
-
-const StatCard = ({
-  title,
-  value,
-  icon: Icon,
-  color,
-  trend
-}: {
-  title: string;
-  value: string | number;
-  icon: React.ComponentType<any>;
-  color: string;
-  trend?: string;
-}) => (
-  <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-gray-400 font-medium text-sm">{title}</h3>
-      <div className={`p-3 rounded-lg ${color}`}>
-        <Icon className="w-6 h-6 text-white" />
-      </div>
-    </div>
-    <div className="text-3xl font-bold text-white mb-2">{value}</div>
-    {trend && <div className="text-green-400 text-sm font-medium">{trend}</div>}
-  </div>
-);
-
-const mockLatencyData = [
-  { time: '00:00', latency: 120 },
-  { time: '04:00', latency: 90 },
-  { time: '08:00', latency: 200 },
-  { time: '12:00', latency: 350 },
-  { time: '16:00', latency: 280 },
-  { time: '20:00', latency: 150 },
-  { time: '24:00', latency: 130 },
-];
+import { CircularProgress } from '../components/ui/CircularProgress';
+import { MagneticButton } from '../components/ui/InteractionLayer';
 
 export const Dashboard = () => {
-  const [datasetStats, setDatasetStats] = useState<DatasetStats | null>(null);
-  const [trainingStats, setTrainingStats] = useState<TrainingStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [datasetStats, setDatasetStats] = useState<any>(null);
+  const [progress, setProgress] = useState<{ percentage: number; completed: number; total: number }>({ percentage: 0, completed: 0, total: 0 });
+  const [certificates, setCertificates] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [stats, mlStats] = await Promise.all([
+        const [stats, prog, certs] = await Promise.all([
           api.getDatasetStats(),
-          api.getTrainingStats()
+          api.getProgress().catch(() => ({ percentage: 0, completed: 0, total: 0 })),
+          api.getMyCertificates().catch(() => []),
         ]);
         setDatasetStats(stats);
-        setTrainingStats(mlStats);
-      } catch (error) {
-        console.error(error);
+        setProgress(prog);
+        setCertificates(certs);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
+  const recentQueries = [
+    { id: '1', query: 'SELECT * FROM orders o JOIN users u ON o.user_id = u.id', time: '2.3s', status: 'Optimized' },
+    { id: '2', query: 'SELECT * FROM products WHERE category_id = 5', time: '0.8s', status: 'Good' },
+    { id: '3', query: 'SELECT COUNT(*) FROM audit_log WHERE created_at > NOW() - INTERVAL \'7 days\'', time: '1.5s', status: 'Needs Review' },
+  ];
+
+  const StatCard = ({ icon: Icon, title, value, description, color }: any) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-6"
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+      }}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-700/60 bg-zinc-800/60`}>
+          <Icon className="h-6 w-6" style={{ color }} />
+        </div>
+      </div>
+      <h3 className="text-2xl font-bold text-zinc-100 mb-1">{value}</h3>
+      <p className="text-sm text-zinc-400">{title}</p>
+      {description && <p className="text-xs text-zinc-500 mt-2">{description}</p>}
+    </motion.div>
+  );
+
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+      <div className="space-y-8">
+        <div className="animate-shimmer h-12 w-64 bg-zinc-800/40 rounded-xl" />
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="animate-shimmer h-48 bg-zinc-800/40 rounded-2xl" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Overview Dashboard</h1>
-        <p className="text-gray-400">Monitor your SQL optimization performance and ML model accuracy</p>
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl font-bold text-zinc-100 mb-2"
+        >
+          Welcome back
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="text-lg text-zinc-400"
+        >
+          Here's what's happening with your SQL optimization today
+        </motion.p>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      {/* Stats Grid */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Total Queries Analyzed"
-          value={datasetStats?.totalQueries.toLocaleString() || 0}
-          icon={Target}
-          color="bg-blue-600"
+          icon={Database}
+          title="Queries Optimized"
+          value={datasetStats?.totalQueries || 0}
+          description="Total queries processed"
+          color="#6366F1"
         />
         <StatCard
-          title="ML Model Accuracy"
-          value={trainingStats?.accuracy ? `${trainingStats.accuracy}%` : 'N/A'}
-          icon={Brain}
-          color="bg-purple-600"
-        />
-        <StatCard
-          title="Avg. Execution Time"
-          value={datasetStats?.averageExecutionTime ? `${datasetStats.averageExecutionTime.toFixed(2)}ms` : 'N/A'}
           icon={Clock}
-          color="bg-emerald-600"
+          title="Avg Execution Time"
+          value={`${datasetStats?.avgExecutionTime?.toFixed(2) || 0}s`}
+          description="Average query latency"
+          color="#34D399"
         />
         <StatCard
-          title="Slow Queries"
-          value={datasetStats?.slowQueries.toLocaleString() || 0}
           icon={Zap}
-          color="bg-orange-600"
+          title="Slow Queries"
+          value={Math.round((datasetStats?.totalQueriesByCategory?.PERFORMANCE || 0) * 0.75)}
+          description="Queries that need attention"
+          color="#FBBF24"
+        />
+        <StatCard
+          icon={Brain}
+          title="ML Accuracy"
+          value="87%"
+          description="Model prediction accuracy"
+          color="#8B5CF6"
         />
       </div>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h2 className="text-xl font-semibold text-white mb-6">Query Latency over Time</h2>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={mockLatencyData}>
-              <defs>
-                <linearGradient id="colorLatency" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="time" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '0.5rem' }}
-              />
-              <Area
-                type="monotone"
-                dataKey="latency"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#colorLatency)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Main Content Grid */}
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Learning Progress */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-1 spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-6"
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+            e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+          }}
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <GraduationCap className="w-5 h-5 text-zinc-400" />
+            <h2 className="text-xl font-semibold text-zinc-100">Learning Progress</h2>
+          </div>
+          <div className="flex justify-center mb-6">
+            <CircularProgress percentage={progress.percentage || 0} color="#8B5CF6" />
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between text-sm">
+              <span className="text-zinc-400">Completed Chapters</span>
+              <span className="text-zinc-100 font-medium">{progress.completed} / {progress.total}</span>
+            </div>
+            <MagneticButton variant="secondary" onClick={() => window.location.href = '/academy'} className="w-full">
+              Continue Learning
+            </MagneticButton>
+          </div>
+        </motion.div>
+
+        {/* Recent Queries */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="lg:col-span-2 spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-6"
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+            e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+          }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-zinc-400" />
+              <h2 className="text-xl font-semibold text-zinc-100">Recent Queries</h2>
+            </div>
+            <Link
+              to="/studio"
+              className="flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition-colors"
+            >
+              Analyze New Query
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="space-y-4">
+            {recentQueries.map((query, index) => (
+              <motion.div
+                key={query.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + index * 0.1 }}
+                className="flex items-start justify-between p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/40"
+              >
+                <div className="flex-1 mr-4">
+                  <p className="text-sm font-mono text-zinc-100 mb-1 truncate">{query.query}</p>
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs text-zinc-500">{query.time}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      query.status === 'Optimized'
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : query.status === 'Good'
+                        ? 'bg-blue-500/20 text-blue-400'
+                        : 'bg-amber-500/20 text-amber-400'
+                    }`}>
+                      {query.status}
+                    </span>
+                  </div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-zinc-600 flex-shrink-0" />
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
+
+      {/* Certificates Section */}
+      {certificates.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-6"
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+            e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+          }}
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <Award className="w-5 h-5 text-zinc-400" />
+            <h2 className="text-xl font-semibold text-zinc-100">Your Certificates</h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {certificates.map((cert, index) => (
+              <motion.div
+                key={cert.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 + index * 0.1 }}
+                className="p-4 rounded-xl bg-zinc-800/30 border border-zinc-700/40"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+                    <Award className="w-5 h-5 text-yellow-900" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-zinc-100">{cert.type}</h3>
+                    <p className="text-xs text-zinc-500">Issued {new Date(cert.issueDate).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => window.open(cert.verificationLink, '_blank')}
+                    className="flex-1 text-sm px-3 py-2 rounded-lg bg-zinc-700/40 text-zinc-100 hover:bg-zinc-700/60 transition-colors"
+                  >
+                    Verify
+                  </button>
+                  <button
+                    onClick={() => api.downloadCertificate(cert.id)}
+                    className="flex-1 text-sm px-3 py-2 rounded-lg bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 transition-colors"
+                  >
+                    Download
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };

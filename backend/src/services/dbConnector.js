@@ -1,6 +1,9 @@
 const { Client } = require('pg');
-
-const DANGEROUS_KEYWORDS = ['DROP', 'DELETE', 'TRUNCATE', 'ALTER', 'CREATE', 'INSERT', 'UPDATE', 'GRANT', 'REVOKE'];
+const {
+  cleanSqlForValidation,
+  isReadOnlyQuery,
+  findDangerousKeyword,
+} = require('../utils/sqlCleaner');
 const TIMEOUT = 10000; // 10 seconds
 
 function createClient(config) {
@@ -77,20 +80,15 @@ async function getSchemaMetadata(config) {
 }
 
 async function runExplain(config, sql) {
-  const sanitized = sql.trim();
-  const upperSql = sanitized.toUpperCase();
+  const originalQuery = typeof sql === 'string' ? sql.trim() : '';
+  const cleanedSql = cleanSqlForValidation(originalQuery);
 
-  // Check for dangerous keywords
-  for (const keyword of DANGEROUS_KEYWORDS) {
-    if (upperSql.includes(keyword)) {
-      throw new Error('Dangerous SQL operations are not allowed.');
-    }
+  const dangerousKeyword = findDangerousKeyword(cleanedSql);
+  if (dangerousKeyword) {
+    throw new Error('Dangerous SQL operations are not allowed.');
   }
 
-  // Check if it starts with allowed commands
-  const allowedStarts = ['SELECT', 'WITH', 'EXPLAIN'];
-  const startsWithAllowed = allowedStarts.some(start => upperSql.startsWith(start));
-  if (!startsWithAllowed) {
+  if (!isReadOnlyQuery(cleanedSql)) {
     throw new Error('Only SELECT, WITH, or EXPLAIN queries are allowed.');
   }
 
@@ -104,15 +102,15 @@ async function runExplain(config, sql) {
 
     // First run EXPLAIN (without ANALYZE) for syntax check
     const explainResult = await Promise.race([
-      client.query(`EXPLAIN (FORMAT JSON) ${sanitized}`),
-      timeout
+      client.query(`EXPLAIN (FORMAT JSON) ${originalQuery}`),
+      timeout,
     ]);
     const explainPlan = explainResult.rows[0]['QUERY PLAN'][0];
 
     // Then run EXPLAIN ANALYZE for performance
     const fullExplainResult = await Promise.race([
-      client.query(`EXPLAIN (FORMAT JSON, ANALYZE) ${sanitized}`),
-      timeout
+      client.query(`EXPLAIN (FORMAT JSON, ANALYZE) ${originalQuery}`),
+      timeout,
     ]);
 
     return {
