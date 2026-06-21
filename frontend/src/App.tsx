@@ -1,9 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { InteractionLayer } from './components/ui/InteractionLayer';
+import { MouseFollower } from './components/ui/MouseFollower';
 import { Navbar } from './components/layout/Navbar';
+import { Footer } from './components/layout/Footer';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProgressProvider } from './contexts/ProgressContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { OAuthTokenHandler } from './components/auth/OAuthTokenHandler';
 import { Landing } from './pages/Landing';
@@ -23,114 +25,117 @@ import { motion } from 'framer-motion';
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <ProgressProvider>
-        <div className="min-h-screen bg-[#030303] text-zinc-100 relative">
-          <InteractionLayer />
-          <Navbar />
-          <main className="pt-36 px-6 pb-12 max-w-7xl mx-auto relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/auth-success" element={<OAuthTokenHandler />} />
+    <ThemeProvider>
+      <Router>
+        <AuthProvider>
+          <ProgressProvider>
+            <div className="relative flex min-h-screen flex-col bg-base text-muted transition-colors duration-300">
+              <MouseFollower />
+              <Navbar />
+              <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 px-6 pb-8 pt-24 sm:pt-28">
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/auth-success" element={<OAuthTokenHandler />} />
 
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/optimizer"
-                  element={
-                    <ProtectedRoute>
-                      <Optimizer />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/learn"
-                  element={
-                    <ProtectedRoute>
-                      <Academy />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/learn/chapter/:order/quiz-result"
-                  element={
-                    <ProtectedRoute>
-                      <QuizResult />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/learn/chapter/:order"
-                  element={
-                    <ProtectedRoute>
-                      <ChapterPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/academy"
-                  element={
-                    <ProtectedRoute>
-                      <Academy />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/history"
-                  element={
-                    <ProtectedRoute>
-                      <History />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/connections"
-                  element={
-                    <ProtectedRoute>
-                      <Connections />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/certificate/:certId" element={<CertificateView />} />
-                <Route path="/verify/:certId" element={<CertificateView />} />
-                <Route
-                  path="/certificates"
-                  element={
-                    <ProtectedRoute>
-                      <Certificates />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/ml-stats"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <MLStats />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </motion.div>
-          </main>
-          <Toaster position="top-right" />
-        </div>
-        </ProgressProvider>
-      </AuthProvider>
-    </Router>
+                    <Route
+                      path="/dashboard"
+                      element={
+                        <ProtectedRoute>
+                          <Dashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/optimizer"
+                      element={
+                        <ProtectedRoute>
+                          <Optimizer />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/learn"
+                      element={
+                        <ProtectedRoute>
+                          <Academy />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/learn/chapter/:order/quiz-result"
+                      element={
+                        <ProtectedRoute>
+                          <QuizResult />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/learn/chapter/:order"
+                      element={
+                        <ProtectedRoute>
+                          <ChapterPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/academy"
+                      element={
+                        <ProtectedRoute>
+                          <Academy />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/history"
+                      element={
+                        <ProtectedRoute>
+                          <History />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/connections"
+                      element={
+                        <ProtectedRoute>
+                          <Connections />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/certificate/:certId" element={<CertificateView />} />
+                    <Route path="/verify/:certId" element={<CertificateView />} />
+                    <Route
+                      path="/certificates"
+                      element={
+                        <ProtectedRoute>
+                          <Certificates />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/ml-stats"
+                      element={
+                        <ProtectedRoute requireAdmin>
+                          <MLStats />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </motion.div>
+              </main>
+              <Footer />
+              <Toaster position="top-right" theme="system" />
+            </div>
+          </ProgressProvider>
+        </AuthProvider>
+      </Router>
+    </ThemeProvider>
   );
 }
 

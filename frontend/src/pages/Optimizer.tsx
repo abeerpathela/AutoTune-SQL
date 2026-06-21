@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { Zap, Copy, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Database, Lightbulb } from 'lucide-react';
 import { api } from '../lib/api';
+import { BrandStrip } from '../components/brand/BrandStrip';
 import type { AnalysisResult, OptimizationResult, DbConnection, QueryAnalysisError } from '../types';
 import { toast } from 'sonner';
 
@@ -373,6 +374,7 @@ JOIN orders o ON u.id = o.user_id;`);
 
   return (
     <div className="space-y-6">
+      <BrandStrip title="SQL Optimizer" subtitle="Analyze, score risk, and rewrite queries with AI" />
       <div>
         <h1 className="text-3xl font-bold text-white mb-2">SQL Optimizer</h1>
         <p className="text-gray-400">Analyze, score risk, and optimize your SQL queries with AI</p>

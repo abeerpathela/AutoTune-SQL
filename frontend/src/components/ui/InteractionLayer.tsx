@@ -1,56 +1,11 @@
-import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useMagnetic } from '../../hooks/useMagnetic';
-
-export const InteractionLayer = () => {
-  const mouseX = useMotionValue(-200);
-  const mouseY = useMotionValue(-200);
-  const springX = useSpring(mouseX, { stiffness: 500, damping: 30 });
-  const springY = useSpring(mouseY, { stiffness: 500, damping: 30 });
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
-      setIsVisible(true);
-    };
-
-    const handleMouseLeave = () => {
-      setIsVisible(false);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseleave', handleMouseLeave);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, [mouseX, mouseY]);
-
-  return (
-    <motion.div
-      className="fixed pointer-events-none z-50 rounded-full mix-blend-screen"
-      style={{
-        left: springX,
-        top: springY,
-        x: '-50%',
-        y: '-50%',
-        width: 300,
-        height: 300,
-        background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
-        opacity: isVisible ? 1 : 0,
-        transition: 'opacity 0.3s ease',
-      }}
-    />
-  );
-};
 
 interface MagneticButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'gradient';
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
 }
@@ -63,7 +18,14 @@ export const MagneticButton = ({
   type = 'button',
   disabled = false,
 }: MagneticButtonProps) => {
-  const { ref, x, y, handlers } = useMagnetic({ distance: 30 });
+  const { ref, x, y, handlers } = useMagnetic({ distance: 24 });
+
+  const variantClass =
+    variant === 'gradient'
+      ? 'btn-gradient'
+      : variant === 'secondary'
+        ? 'btn-secondary backdrop-blur-xl hover:bg-[var(--accent-glow)]'
+        : 'btn-primary';
 
   return (
     <motion.button
@@ -71,17 +33,16 @@ export const MagneticButton = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      style={{ x, y, scale: 1 }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.95 }}
-      className={`relative overflow-hidden rounded-full transition-all duration-200 font-semibold text-sm px-7 py-3 ${
-        variant === 'primary'
-          ? 'bg-zinc-100 text-zinc-900 hover:bg-white shadow-lg hover:shadow-xl'
-          : 'bg-zinc-900/60 text-zinc-100 border border-zinc-700/60 hover:bg-zinc-800/70'
-      } ${className}`}
+      style={{ x, y }}
+      whileHover={{ scale: disabled ? 1 : 1.02 }}
+      whileTap={{ scale: disabled ? 1 : 0.97 }}
+      className={`interactive-target relative overflow-hidden rounded-full px-7 py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-50 ${variantClass} ${className}`}
       {...handlers}
     >
       {children}
     </motion.button>
   );
 };
+
+/** @deprecated Use MouseFollower instead */
+export const InteractionLayer = () => null;

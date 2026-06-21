@@ -1,236 +1,253 @@
-import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { useEffect } from 'react';
 import { Database, Zap, Code, BarChart2 } from 'lucide-react';
 import { MagneticButton } from '../components/ui/InteractionLayer';
+import { SpotlightCard } from '../components/ui/SpotlightCard';
+import { Logo } from '../components/brand/Logo';
+import { BRAND } from '../lib/brand';
 
-const FeatureCard = ({ icon: Icon, title, description }: { icon: any; title: string; description: string }) => {
-  const ref = useRef<HTMLDivElement>(null);
+function WordReveal({ text, className = '' }: { text: string; className?: string }) {
+  const words = text.split(' ');
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    ref.current.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-    ref.current.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-  };
+  return (
+    <span className={className}>
+      {words.map((word, i) => (
+        <motion.span
+          key={`${word}-${i}`}
+          initial={{ opacity: 0, y: 24, filter: 'blur(8px)' }}
+          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          transition={{
+            duration: 0.55,
+            delay: 0.08 + i * 0.07,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="inline-block mr-[0.28em]"
+        >
+          {word}
+        </motion.span>
+      ))}
+    </span>
+  );
+}
+
+function FeatureCard({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: typeof Database;
+  title: string;
+  description: string;
+}) {
+  return (
+    <SpotlightCard className="p-6">
+      <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-theme bg-[var(--bg-elevated)]">
+        <Icon className="h-6 w-6 text-primary" />
+      </div>
+      <h3 className="mb-2 text-lg font-semibold text-primary">{title}</h3>
+      <p className="text-sm leading-relaxed text-muted">{description}</p>
+    </SpotlightCard>
+  );
+}
+
+function FloatingSqlBlock() {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const rotateX = useSpring(useTransform(mouseY, [-200, 200], [8, -8]), {
+    stiffness: 120,
+    damping: 22,
+  });
+  const rotateY = useSpring(useTransform(mouseX, [-200, 200], [-10, 10]), {
+    stiffness: 120,
+    damping: 22,
+  });
+  const floatY = useSpring(0, { stiffness: 40, damping: 12 });
+
+  useEffect(() => {
+    let frame: number;
+    const animate = () => {
+      floatY.set(Math.sin(Date.now() / 1200) * 6);
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [floatY]);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      mouseX.set(e.clientX - cx);
+      mouseY.set(e.clientY - cy);
+    };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
+  }, [mouseX, mouseY]);
 
   return (
     <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      onMouseMove={handleMouseMove}
-      className="spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-6 backdrop-blur-sm"
+      style={{
+        rotateX,
+        rotateY,
+        y: floatY,
+        transformPerspective: 900,
+      }}
+      className="relative"
     >
-      <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-zinc-700/60 bg-zinc-800/60">
-        <Icon className="h-6 w-6 text-zinc-100" />
-      </div>
-      <h3 className="mb-2 text-lg font-semibold text-zinc-100">{title}</h3>
-      <p className="text-sm leading-relaxed text-zinc-400">{description}</p>
-    </motion.div>
-  );
-};
-
-const DatabaseSchemaGraphic = () => {
-  return (
-    <div className="relative">
-      <motion.div
-        initial={{ x: 40, opacity: 0 }}
-        whileInView={{ x: 0, opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.7 }}
-        className="relative"
-      >
-        {/* Main Table */}
-        <div className="rounded-2xl border border-zinc-800/60 bg-zinc-900/50 p-6 shadow-xl backdrop-blur-sm">
-          <div className="mb-4 flex items-center gap-2 border-b border-zinc-800/60 pb-3">
-            <div className="h-3 w-3 rounded-full bg-red-500/80" />
-            <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
-            <div className="h-3 w-3 rounded-full bg-green-500/80" />
-            <span className="ml-3 font-mono text-xs text-zinc-500">users</span>
+      <div className="glass-strong rounded-2xl p-6 shadow-glow-cyan">
+        <div className="mb-4 flex items-center gap-2 border-b border-theme pb-3">
+          <div className="h-3 w-3 rounded-full bg-red-500/80" />
+          <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
+          <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
+          <span className="ml-3 font-mono text-xs text-subtle">optimizer.sql</span>
+        </div>
+        <div className="space-y-1.5 font-mono text-sm">
+          <div>
+            <span className="text-subtle">1</span>{' '}
+            <span className="text-cyan-400/90">EXPLAIN ANALYZE</span>{' '}
+            <span className="text-primary">SELECT</span>{' '}
+            <span className="text-muted">u.email, COUNT(o.id)</span>
           </div>
-          <div className="space-y-2 font-mono text-sm">
-            <div className="flex items-center gap-3">
-              <span className="text-violet-400">id</span>
-              <span className="text-zinc-500">SERIAL</span>
-              <span className="text-emerald-400">PRIMARY KEY</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-violet-400">name</span>
-              <span className="text-zinc-500">VARCHAR</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-violet-400">email</span>
-              <span className="text-zinc-500">VARCHAR</span>
-              <span className="text-amber-400">UNIQUE</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-violet-400">created_at</span>
-              <span className="text-zinc-500">TIMESTAMP</span>
-            </div>
+          <div>
+            <span className="text-subtle">2</span>{' '}
+            <span className="text-cyan-400/90">FROM</span>{' '}
+            <span className="text-muted">users u</span>
+          </div>
+          <div>
+            <span className="text-subtle">3</span>{' '}
+            <span className="text-cyan-400/90">JOIN</span>{' '}
+            <span className="text-muted">orders o ON u.id = o.user_id</span>
+          </div>
+          <div>
+            <span className="text-subtle">4</span>{' '}
+            <span className="text-cyan-400/90">GROUP BY</span>{' '}
+            <span className="text-muted">u.email</span>
+          </div>
+          <div>
+            <span className="text-subtle">5</span>{' '}
+            <span className="text-cyan-400/90">HAVING</span>{' '}
+            <span className="text-muted">COUNT(o.id) &gt; 10;</span>
           </div>
         </div>
-
-        {/* Second Table (Floating) */}
         <motion.div
-          initial={{ x: 30, y: 30, opacity: 0 }}
-          whileInView={{ x: 30, y: 30, opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.15 }}
-          className="absolute -right-10 top-20 rounded-xl border border-zinc-800/60 bg-zinc-900/40 p-4 shadow-lg backdrop-blur-sm"
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.2 }}
+          className="mt-4 rounded-lg border border-[var(--success-border)] bg-success-subtle px-3 py-2 text-xs font-medium text-success"
         >
-          <div className="mb-3 border-b border-zinc-800/60 pb-2">
-            <span className="font-mono text-xs text-zinc-500">orders</span>
-          </div>
-          <div className="space-y-1 font-mono text-xs">
-            <div className="flex items-center gap-2">
-              <span className="text-violet-400">user_id</span>
-              <span className="text-blue-400">FOREIGN KEY</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-violet-400">amount</span>
-              <span className="text-zinc-500">DECIMAL</span>
-            </div>
-          </div>
+          ✓ Index scan · 12ms · 94% faster
         </motion.div>
-
-        {/* Query Editor */}
-        <motion.div
-          initial={{ x: -30, y: 40, opacity: 0 }}
-          whileInView={{ x: -30, y: 40, opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="absolute -left-16 bottom-0 rounded-xl border border-zinc-800/60 bg-zinc-900/40 p-4 shadow-lg backdrop-blur-sm"
-        >
-          <div className="space-y-1 font-mono text-xs">
-            <div>
-              <span className="text-zinc-600">1</span> <span className="text-violet-400">SELECT</span> <span className="text-zinc-100">*</span>
-            </div>
-            <div>
-              <span className="text-zinc-600">2</span> <span className="text-violet-400">FROM</span> <span className="text-zinc-200">users</span>
-            </div>
-            <div>
-              <span className="text-zinc-600">3</span> <span className="text-violet-400">JOIN</span> <span className="text-zinc-200">orders</span>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-    </div>
+      </div>
+    </motion.div>
   );
-};
+}
 
 export const Landing = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col relative z-10">
-      {/* Hero */}
-      <section className="flex-1 flex items-center pb-24">
-        <div className="max-w-7xl mx-auto w-full">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+    <div className="relative z-10 flex min-h-screen flex-col">
+      <div className="pointer-events-none absolute inset-0 grid-bg opacity-80" />
+
+      <section className="relative flex flex-1 items-center pb-24">
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="grid items-center gap-16 lg:grid-cols-2">
             <div className="space-y-8">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.4 }}
               >
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-700/60 bg-zinc-800/40 text-xs text-zinc-300 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Now powered by Llama-3.3
+                <Logo size="lg" showText showTagline to="/" className="mb-6" />
+                <span className="inline-flex items-center gap-2 rounded-full border border-theme bg-[var(--bg-glass)] px-3 py-1.5 text-xs font-medium text-muted backdrop-blur-xl">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
+                  {BRAND.tagline} · Powered by Llama-3.3
                 </span>
               </motion.div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-zinc-100"
-              >
-                Engineering-grade
+              <h1 className="text-5xl font-semibold tracking-tight text-primary md:text-6xl lg:text-7xl">
+                <WordReveal text="Engineering-grade" />
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-blue-400">
-                  SQL Optimization.
+                <span className="accent-shimmer">
+                  <WordReveal text="SQL Optimization." />
                 </span>
-              </motion.h1>
+              </h1>
 
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-lg text-zinc-400 max-w-lg leading-relaxed"
+                transition={{ duration: 0.5, delay: 0.55 }}
+                className="max-w-lg text-lg leading-relaxed text-muted"
               >
-                Stop guessing about your query performance. AutoTune-SQL uses AI
-                and machine learning to analyze, optimize, and predict slow queries
-                before they hit production.
+                Stop guessing about query performance. AutoTune-SQL uses AI and machine learning
+                to analyze, optimize, and predict slow queries before they hit production.
               </motion.p>
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
                 className="flex flex-wrap items-center gap-4"
               >
-                <MagneticButton onClick={() => navigate('/optimizer')}>
-                  Get Started
-                </MagneticButton>
-                <MagneticButton variant="secondary" onClick={() => navigate('/dashboard')}>
-                  View Demo
+                <MagneticButton onClick={() => navigate('/optimizer')}>Get Started</MagneticButton>
+                <MagneticButton variant="secondary" onClick={() => navigate('/learn')}>
+                  Open Academy
                 </MagneticButton>
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
+                transition={{ duration: 0.5, delay: 0.85 }}
                 className="flex items-center gap-8 pt-4"
               >
                 <div className="flex -space-x-3">
                   {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-9 w-9 rounded-full border-2 border-zinc-900 bg-zinc-800 flex items-center justify-center text-xs text-zinc-200">
+                    <div
+                      key={i}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[var(--bg-base)] bg-[var(--bg-elevated)] text-xs text-primary"
+                    >
                       {String.fromCharCode(64 + i)}
                     </div>
                   ))}
                 </div>
-                <div className="text-sm text-zinc-400">
-                  <span className="text-zinc-100 font-semibold">500+</span> engineers optimizing queries daily
-                </div>
+                <p className="text-sm text-muted">
+                  <span className="font-semibold text-primary">500+</span> engineers optimizing
+                  daily
+                </p>
               </motion.div>
             </div>
 
             <div className="hidden lg:block">
-              <DatabaseSchemaGraphic />
+              <FloatingSqlBlock />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="pb-32">
-        <div className="max-w-7xl mx-auto w-full">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FeatureCard
-              icon={Database}
-              title="Dynamic Connections"
-              description="Connect to any PostgreSQL database and analyze queries in real-time."
-            />
-            <FeatureCard
-              icon={Zap}
-              title="AI Optimization"
-              description="Llama-3.3 powered query optimization with actionable insights."
-            />
-            <FeatureCard
-              icon={Code}
-              title="Explain Plans"
-              description="Deep query plan analysis with cost-based optimization suggestions."
-            />
-            <FeatureCard
-              icon={BarChart2}
-              title="ML Predictions"
-              description="Machine learning powered slow query prediction and risk assessment."
-            />
-          </div>
+      <section className="relative pb-32">
+        <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <FeatureCard
+            icon={Database}
+            title="Dynamic Connections"
+            description="Connect to any PostgreSQL database and analyze queries in real-time."
+          />
+          <FeatureCard
+            icon={Zap}
+            title="AI Optimization"
+            description="Llama-3.3 powered query optimization with actionable insights."
+          />
+          <FeatureCard
+            icon={Code}
+            title="Explain Plans"
+            description="Deep query plan analysis with cost-based optimization suggestions."
+          />
+          <FeatureCard
+            icon={BarChart2}
+            title="ML Predictions"
+            description="Machine learning powered slow query prediction and risk assessment."
+          />
         </div>
       </section>
     </div>

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Award, Download, Linkedin, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import Logo from '../assets/WEBSITE_LOGO.svg';
+import { Logo } from '../components/brand/Logo';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -120,7 +120,7 @@ export function CertificateView() {
         <div className="absolute inset-4 border border-zinc-800/80 rounded-xl pointer-events-none" />
 
         <div className="relative flex items-center justify-between mb-10">
-          <img src={Logo} alt="AutoTune-SQL" className="h-14" />
+          <Logo size="md" showText showTagline />
           <span className="text-xs font-mono text-zinc-500">{certId}</span>
         </div>
 

@@ -5,6 +5,7 @@ import { Award, Download, ExternalLink, Linkedin, Lock, Sparkles } from 'lucide-
 import { api } from '../lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
+import { BrandStrip } from '../components/brand/BrandStrip';
 import {
   generateCertificatePdf,
   getLinkedInShareUrl,
@@ -292,7 +293,9 @@ export const Certificates = () => {
   }
 
   return (
-    <AnimatePresence mode="wait">
+    <div className="space-y-6">
+      <BrandStrip title="Certifications" subtitle="Your official AutoTune-SQL credentials" />
+      <AnimatePresence mode="wait">
       {hasCertificates ? (
         <EarnedView certificates={certificates} displayName={displayName} />
       ) : (
@@ -302,6 +305,7 @@ export const Certificates = () => {
           onContinue={handleContinueLearning}
         />
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </div>
   );
 };

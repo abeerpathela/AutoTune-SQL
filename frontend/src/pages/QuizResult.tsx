@@ -38,11 +38,11 @@ export function QuizResult() {
 
   if (!state?.result) {
     return (
-      <div className="text-center py-20">
-        <p className="text-zinc-400 mb-4">No quiz result found.</p>
+      <div className="py-20 text-center">
+        <p className="mb-4 text-muted">No quiz result found.</p>
         <button
           onClick={() => navigate(`/learn/chapter/${order ?? 1}`)}
-          className="px-6 py-3 rounded-xl bg-violet-500 text-white font-semibold"
+          className="btn-primary rounded-xl px-6 py-3 font-semibold"
         >
           Back to Chapter
         </button>
@@ -50,59 +50,57 @@ export function QuizResult() {
     );
   }
 
-  const { result, chapterOrder, chapterTitle, questions, focusFailed } = state;
+  const { result, chapterOrder, chapterTitle, focusFailed } = state;
   const passed = result.passed;
   const correct = result.correctCount ?? Math.round((result.score / 100) * (result.totalCount || 10));
   const total = result.totalCount ?? 10;
   const review: QuizReviewItem[] = result.review ?? [];
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="mx-auto max-w-3xl space-y-8">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         className={`rounded-2xl border p-10 text-center ${
-          passed
-            ? 'border-emerald-500/50 bg-emerald-950/30'
-            : 'border-red-500/40 bg-red-950/20'
+          passed ? 'bg-success-subtle border-[var(--success-border)]' : 'bg-error-subtle border-[var(--error-border)]'
         }`}
       >
         {focusFailed ? (
-          <AlertTriangle className="w-16 h-16 text-amber-400 mx-auto mb-4" />
+          <AlertTriangle className="mx-auto mb-4 h-16 w-16 text-amber-500" />
         ) : passed ? (
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}>
-            <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
+            <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-success" />
           </motion.div>
         ) : (
-          <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <XCircle className="mx-auto mb-4 h-16 w-16 text-error" />
         )}
 
-        <h1 className="text-3xl font-bold text-zinc-100 mb-2">
+        <h1 className="mb-2 text-3xl font-bold text-primary">
           {focusFailed ? 'Quiz Failed — Focus Violation' : passed ? 'Quiz Passed!' : 'Quiz Failed'}
         </h1>
 
-        {chapterTitle && <p className="text-zinc-400 mb-6">{chapterTitle}</p>}
+        {chapterTitle && <p className="mb-6 text-muted">{chapterTitle}</p>}
 
-        <div className="flex justify-center gap-8 mb-6">
+        <div className="mb-6 flex justify-center gap-8">
           <div>
-            <p className="text-4xl font-bold text-zinc-100">
+            <p className="text-4xl font-bold text-primary">
               {correct}/{total}
             </p>
-            <p className="text-sm text-zinc-500">Score</p>
+            <p className="text-sm text-subtle">Score</p>
           </div>
           <div>
-            <p className="text-4xl font-bold text-violet-400">{result.score}%</p>
-            <p className="text-sm text-zinc-500">Percentage</p>
+            <p className="text-4xl font-bold accent-shimmer">{result.score}%</p>
+            <p className="text-sm text-subtle">Percentage</p>
           </div>
           <div>
             <p
-              className={`text-2xl font-bold px-4 py-2 rounded-lg ${
-                passed ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
+              className={`rounded-lg px-4 py-2 text-2xl font-bold ${
+                passed ? 'bg-success-subtle text-success' : 'bg-error-subtle text-error'
               }`}
             >
               {passed ? 'PASS' : 'FAIL'}
             </p>
-            <p className="text-sm text-zinc-500 mt-1">Status</p>
+            <p className="mt-1 text-sm text-subtle">Status</p>
           </div>
         </div>
 
@@ -111,47 +109,47 @@ export function QuizResult() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-emerald-300 font-medium"
+            className="font-medium text-success"
           >
             Success! Next chapter unlocked.
           </motion.p>
         )}
 
         {focusFailed && (
-          <p className="text-amber-300/90 text-sm">
+          <p className="text-sm text-amber-600 dark:text-amber-300">
             You left the quiz page three times. Score set to 0%. Review the theory and retry.
           </p>
         )}
 
         {!passed && !focusFailed && (
-          <p className="text-zinc-400 text-sm">You need 80% (8/10) to pass. Review your answers below.</p>
+          <p className="text-sm text-muted">You need 80% (8/10) to pass. Review your answers below.</p>
         )}
       </motion.div>
 
-      <div className="flex flex-wrap gap-3 justify-center">
+      <div className="flex flex-wrap justify-center gap-3">
         {review.length > 0 && (
           <button
             onClick={() => setShowReview((v) => !v)}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-zinc-800 text-zinc-100 hover:bg-zinc-700 font-medium"
+            className="interactive-target inline-flex items-center gap-2 rounded-xl border border-theme bg-[var(--bg-elevated)] px-5 py-3 font-medium text-primary hover:bg-[var(--accent-glow)]"
           >
-            <ClipboardList className="w-4 h-4" />
+            <ClipboardList className="h-4 w-4" />
             {showReview ? 'Hide Review' : 'Review Answers'}
           </button>
         )}
         <button
           onClick={() => navigate(`/learn/chapter/${chapterOrder}`)}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-violet-500 text-white font-semibold hover:bg-violet-600"
+          className="interactive-target inline-flex items-center gap-2 rounded-xl border border-theme bg-[var(--bg-elevated)] px-5 py-3 font-semibold text-primary hover:bg-[var(--accent-glow)]"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="h-4 w-4" />
           Retry Quiz
         </button>
         {passed && result.nextChapterId && (
           <button
             onClick={() => navigate(`/learn/chapter/${chapterOrder + 1}`)}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-500"
+            className="btn-gradient inline-flex items-center gap-2 rounded-xl px-5 py-3 font-semibold"
           >
             Next Chapter
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         )}
       </div>
@@ -167,26 +165,24 @@ export function QuizResult() {
             {review.map((item, i) => (
               <div
                 key={i}
-                className={`p-4 rounded-xl border ${
-                  item.isCorrect
-                    ? 'border-emerald-500/30 bg-emerald-950/20'
-                    : 'border-red-500/30 bg-red-950/15'
+                className={`rounded-xl border p-4 ${
+                  item.isCorrect ? 'bg-success-subtle border-[var(--success-border)]' : 'bg-error-subtle border-[var(--error-border)]'
                 }`}
               >
-                <p className="text-sm font-medium text-zinc-200 mb-3">
+                <p className="mb-3 text-sm font-medium text-primary">
                   {i + 1}. {item.question}
                 </p>
-                <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                <div className="grid gap-3 text-sm sm:grid-cols-2">
                   <div>
-                    <p className="text-zinc-500 mb-1">Your answer</p>
-                    <p className={item.isCorrect ? 'text-emerald-300' : 'text-red-300'}>
+                    <p className="mb-1 text-subtle">Your answer</p>
+                    <p className={`font-medium ${item.isCorrect ? 'text-success' : 'text-error'}`}>
                       {item.userAnswer >= 0 ? item.options[item.userAnswer] : '—'}
                     </p>
                   </div>
                   {!item.isCorrect && (
                     <div>
-                      <p className="text-zinc-500 mb-1">Correct answer</p>
-                      <p className="text-emerald-300">{item.options[item.correctAnswer]}</p>
+                      <p className="mb-1 text-subtle">Correct answer</p>
+                      <p className="font-medium text-success">{item.options[item.correctAnswer]}</p>
                     </div>
                   )}
                 </div>
@@ -195,10 +191,6 @@ export function QuizResult() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {questions && showReview && review.length === 0 && (
-        <p className="text-center text-zinc-500 text-sm">No detailed review available for this attempt.</p>
-      )}
     </div>
   );
 }

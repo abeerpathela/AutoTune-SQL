@@ -85,6 +85,20 @@ export const AcademySidebar = memo(function AcademySidebar({
 
   const moduleTitles = Array.from(new Set(catalog.map((c) => c.moduleTitle)));
 
+  const listVariants = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.035, delayChildren: 0.05 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    show: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.35, ease: 'easeOut' as const },
+    },
+  };
+
   return (
     <>
       {showConfetti && (
@@ -98,17 +112,22 @@ export const AcademySidebar = memo(function AcademySidebar({
       )}
 
       <aside
-        className={`lg:col-span-1 flex flex-col max-h-[80vh] ${
-          quizActive ? 'pointer-events-none opacity-40 select-none' : ''
+        className={`glass lg:col-span-1 flex max-h-[80vh] flex-col rounded-2xl p-3 ${
+          quizActive ? 'pointer-events-none select-none opacity-40' : ''
         }`}
       >
-        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+        <div className="flex-1 space-y-4 overflow-y-auto pr-1">
           {moduleTitles.map((moduleTitle) => (
             <div key={moduleTitle}>
-              <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2 px-2">
+              <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-subtle">
                 {moduleTitle}
               </h3>
-              <div className="space-y-1">
+              <motion.div
+                variants={listVariants}
+                initial="hidden"
+                animate="show"
+                className="space-y-0.5"
+              >
                 {catalog
                   .filter((c) => c.moduleTitle === moduleTitle)
                   .map((ch) => {
@@ -119,9 +138,9 @@ export const AcademySidebar = memo(function AcademySidebar({
                     return (
                       <motion.button
                         key={ch.id}
+                        variants={itemVariants}
                         layout
-                        initial={false}
-                        whileHover={unlocked && !quizActive ? { x: 2 } : undefined}
+                        whileHover={unlocked && !quizActive ? { x: 3 } : undefined}
                         onClick={() => {
                           if (!quizActive && unlocked) {
                             navigate(`/learn/chapter/${ch.globalOrder}`);
@@ -129,12 +148,12 @@ export const AcademySidebar = memo(function AcademySidebar({
                           }
                         }}
                         disabled={!unlocked || quizActive}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs transition-all ${
+                        className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs transition-all ${
                           isActive
-                            ? 'bg-violet-500/20 border border-violet-500/40 text-violet-200'
+                            ? 'border border-theme bg-[var(--text-primary)] font-medium text-[var(--bg-base)]'
                             : unlocked
-                            ? 'text-zinc-400 hover:bg-zinc-800/60'
-                            : 'text-zinc-600 opacity-50 cursor-not-allowed'
+                              ? 'text-muted hover:bg-[var(--accent-glow)] hover:text-primary'
+                              : 'cursor-not-allowed text-subtle opacity-45'
                         }`}
                       >
                         <AnimatePresence mode="wait">
@@ -146,7 +165,7 @@ export const AcademySidebar = memo(function AcademySidebar({
                               exit={{ scale: 0, rotate: 180 }}
                               transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                             >
-                              <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <Check className="h-4 w-4 shrink-0 text-emerald-500" />
                             </motion.span>
                           ) : unlocked ? (
                             <motion.span key={`icon-${ch.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -169,21 +188,21 @@ export const AcademySidebar = memo(function AcademySidebar({
                       </motion.button>
                     );
                   })}
-              </div>
+              </motion.div>
             </div>
           ))}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-zinc-800/80 shrink-0">
+        <div className="mt-4 shrink-0 border-t border-theme pt-4">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleCertificate}
             disabled={generating || quizActive}
-            className={`relative w-full overflow-hidden rounded-lg px-4 py-3 font-bold text-black shadow-[0_0_15px_rgba(255,255,255,0.2)] disabled:opacity-60 ${
+            className={`interactive-target relative w-full overflow-hidden rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-60 ${
               totalProgress >= 100
-                ? 'bg-gradient-to-r from-zinc-200 to-zinc-500'
-                : 'bg-gradient-to-r from-zinc-700 to-zinc-800 text-zinc-300 shadow-none'
+                ? 'bg-[var(--text-primary)] text-[var(--bg-base)] shadow-glow'
+                : 'border border-theme bg-[var(--bg-elevated)] text-muted'
             }`}
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
@@ -204,7 +223,7 @@ export const AcademySidebar = memo(function AcademySidebar({
               />
             )}
           </motion.button>
-          <p className="text-[10px] text-zinc-600 text-center mt-2">
+          <p className="mt-2 text-center text-[10px] text-subtle">
             {totalProgress}% · {stats.totalChapters} chapters
           </p>
         </div>

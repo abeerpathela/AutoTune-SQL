@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Play, Terminal, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
+import { useTheme } from '../../contexts/ThemeContext';
 import type { PracticeLabSpec } from '../../types';
 
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
@@ -41,6 +42,7 @@ function validateLabResult(
 }
 
 export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
+  const { isDark } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [sql, setSql] = useState(practiceLab?.practiceQuery ?? 'SELECT 1;');
@@ -122,10 +124,10 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
   }, [sql, practiceLab]);
 
   return (
-    <section ref={containerRef} className="rounded-2xl border border-zinc-800/60 bg-zinc-900/50 overflow-hidden">
-      <div className="flex items-center gap-2 px-6 py-4 border-b border-zinc-800/60">
-        <Terminal className="w-5 h-5 text-violet-400" />
-        <h3 className="text-lg font-semibold text-zinc-100">Practice Lab</h3>
+    <section ref={containerRef} className="glass overflow-hidden rounded-2xl">
+      <div className="flex items-center gap-2 border-b border-theme px-6 py-4">
+        <Terminal className="h-5 w-5 text-primary" />
+        <h3 className="text-lg font-semibold text-primary">Practice Lab</h3>
         {passed && (
           <span className="ml-2 text-xs font-semibold text-emerald-400 flex items-center gap-1">
             <CheckCircle className="w-3.5 h-3.5" /> PASSED
@@ -151,7 +153,7 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
               <MonacoEditor
                 height="224px"
                 language="sql"
-                theme="vs-dark"
+                theme={isDark ? 'vs-dark' : 'light'}
                 value={sql}
                 onChange={(v) => setSql(v ?? '')}
                 options={{
@@ -169,7 +171,7 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
             <button
               onClick={handleRunQuery}
               disabled={running}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-500 text-white font-semibold hover:bg-violet-600 disabled:opacity-50"
+              className="interactive-target inline-flex items-center gap-2 rounded-xl bg-[var(--text-primary)] px-5 py-2.5 font-semibold text-[var(--bg-base)] hover:opacity-90 disabled:opacity-50"
             >
               <Play className="w-4 h-4" />
               {running ? 'Running…' : 'Run Query'}

@@ -20,7 +20,7 @@ import { PracticeLab } from '../components/academy/PracticeLab';
 import { extractYouTubeId } from '../utils/youtube';
 import { Quiz } from '../components/academy/Quiz';
 import { api } from '../lib/api';
-import Logo from '../assets/WEBSITE_LOGO.svg';
+import { Logo } from '../components/brand/Logo';
 import { useProgress } from '../contexts/ProgressContext';
 import type { Chapter, ChapterContent, QuizQuestion, QuizSubmitResult } from '../types';
 
@@ -276,7 +276,7 @@ export const ChapterPage = () => {
         className="flex flex-col sm:flex-row sm:items-end justify-between gap-4"
       >
         <div className="flex items-start gap-4">
-          <img src={Logo} alt="AutoTune-SQL" className="h-12 w-auto shrink-0 hidden sm:block" />
+          <Logo size="sm" showText={false} className="hidden shrink-0 sm:block" />
           <div>
             <p className="text-sm text-violet-400 font-medium">{chapter.moduleTitle}</p>
             <h1 className="text-3xl font-bold text-zinc-100 mt-1">AutoTune Academy</h1>
@@ -322,9 +322,12 @@ export const ChapterPage = () => {
                   />
 
                   {theoryContent && (
-                    <div className="prose prose-invert prose-sm max-w-none rounded-2xl border border-zinc-800/60 bg-zinc-900/50 p-6">
+                    <motion.section
+                      layoutId="chapter-theory"
+                      className="glass prose prose-sm max-w-none rounded-2xl p-6 dark:prose-invert"
+                    >
                       <ReactMarkdown>{theoryContent}</ReactMarkdown>
-                    </div>
+                    </motion.section>
                   )}
 
                   <PracticeLab chapterTitle={chapter.title} practiceLab={content?.practiceLab} />
@@ -377,43 +380,50 @@ export const ChapterPage = () => {
                   )}
 
                   {!isChapterCompleted && questions.length > 0 && (
-                    <Quiz
-                      chapterId={chapter.id}
-                      chapterOrder={chapterOrder}
-                      questions={questions}
-                      disabled={isChapterCompleted}
-                      onSubmit={handleQuizSubmit}
-                      onComplete={handleQuizComplete}
-                      onActiveChange={setQuizActive}
-                    />
+                    <motion.div layoutId="chapter-quiz">
+                      <Quiz
+                        chapterId={chapter.id}
+                        chapterOrder={chapterOrder}
+                        questions={questions}
+                        disabled={isChapterCompleted}
+                        onSubmit={handleQuizSubmit}
+                        onComplete={handleQuizComplete}
+                        onActiveChange={setQuizActive}
+                      />
+                    </motion.div>
                   )}
                 </div>
               )}
 
               {isTheory && (
                 <>
-                  <section className="rounded-2xl border border-zinc-800/60 bg-zinc-900/50 p-8">
-                    <div className="flex items-center gap-2 mb-4">
-                      <BookOpen className="w-5 h-5 text-cyan-400" />
-                      <h3 className="text-lg font-semibold text-zinc-100">Detailed Theory</h3>
+                  <motion.section
+                    layoutId="chapter-theory"
+                    className="glass rounded-2xl p-8"
+                  >
+                    <div className="mb-4 flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-primary" />
+                      <h3 className="text-lg font-semibold text-primary">Detailed Theory</h3>
                     </div>
-                    <div className="prose prose-invert prose-sm max-w-none">
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
                       <ReactMarkdown>{theoryContent}</ReactMarkdown>
                     </div>
-                  </section>
+                  </motion.section>
 
                   <PracticeLab chapterTitle={chapter.title} practiceLab={content?.practiceLab} />
 
                   {!isChapterCompleted && questions.length > 0 && (
-                    <Quiz
-                      chapterId={chapter.id}
-                      chapterOrder={chapterOrder}
-                      questions={questions}
-                      disabled={isChapterCompleted}
-                      onSubmit={handleQuizSubmit}
-                      onComplete={handleQuizComplete}
-                      onActiveChange={setQuizActive}
-                    />
+                    <motion.div layoutId="chapter-quiz">
+                      <Quiz
+                        chapterId={chapter.id}
+                        chapterOrder={chapterOrder}
+                        questions={questions}
+                        disabled={isChapterCompleted}
+                        onSubmit={handleQuizSubmit}
+                        onComplete={handleQuizComplete}
+                        onActiveChange={setQuizActive}
+                      />
+                    </motion.div>
                   )}
                 </>
               )}

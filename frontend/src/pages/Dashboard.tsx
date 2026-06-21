@@ -5,6 +5,7 @@ import { Zap, Database, Clock, Brain, ArrowRight, Award, GraduationCap } from 'l
 import { api } from '../lib/api';
 import { CircularProgress } from '../components/ui/CircularProgress';
 import { MagneticButton } from '../components/ui/InteractionLayer';
+import { BrandStrip } from '../components/brand/BrandStrip';
 import { useProgress } from '../contexts/ProgressContext';
 
 export const Dashboard = () => {
@@ -82,6 +83,7 @@ export const Dashboard = () => {
 
   return (
     <div className="space-y-8">
+      <BrandStrip title="Command Center" subtitle="Your SQL optimization hub" />
       <div>
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
