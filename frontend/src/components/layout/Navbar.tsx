@@ -31,7 +31,7 @@ export const Navbar = () => {
         { to: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
         { to: '/connections', icon: Database, label: 'Connections' },
         { to: '/optimizer', icon: Zap, label: 'Optimizer' },
-        { to: '/learn/chapter/1', icon: GraduationCap, label: 'Learn' },
+        { to: '/learn', icon: GraduationCap, label: 'Learn' },
         { to: '/certificates', icon: Award, label: 'Certificates' },
         ...(user.role === 'ADMIN'
           ? [{ to: '/ml-stats', icon: Shield, label: 'Admin' }]
@@ -43,7 +43,7 @@ export const Navbar = () => {
     hasToken && !user
       ? [
           { to: '/optimizer', icon: Zap, label: 'Optimizer' },
-          { to: '/learn/chapter/1', icon: GraduationCap, label: 'Learn' },
+          { to: '/learn', icon: GraduationCap, label: 'Learn' },
         ]
       : [];
 
@@ -72,7 +72,8 @@ export const Navbar = () => {
               key={item.to}
               to={item.to}
               className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium ${
-                location.pathname === item.to
+                location.pathname === item.to ||
+                (item.to === '/learn' && location.pathname.startsWith('/learn'))
                   ? 'bg-zinc-800 text-zinc-100 border border-zinc-700/60 shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40'
               }`}

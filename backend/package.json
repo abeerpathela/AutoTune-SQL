@@ -14,6 +14,9 @@
     "generate:workload": "node scripts/workloadGenerator.js",
     "test": "jest"
   },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "dependencies": {
     "@faker-js/faker": "^10.5.0",
     "@prisma/client": "^6.19.3",
@@ -31,6 +34,7 @@
     "morgan": "^1.10.0",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
+    "pdf-lib": "^1.17.1",
     "pdfkit": "^0.19.1",
     "pg": "^8.22.0",
     "zod": "^3.22.0"

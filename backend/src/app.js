@@ -12,6 +12,7 @@ const connectionRoutes = require('./routes/connectionRoutes');
 const authRoutes = require('./routes/authRoutes');
 const academyRoutes = require('./routes/academyRoutes');
 const certRoutes = require('./routes/certRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const getRedisClient = require('./config/redis');
 const { initializeMLService } = require('./services/mlService');
 const { protect } = require('./middleware/auth');
@@ -47,6 +48,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/academy', protect, academyRoutes);
 app.use('/api/v1/certificates', certRoutes);
+app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/queries', protect, queryRoutes);
 app.use('/api/queries', protect, queryRoutes);
 app.use('/api/optimize', protect, optimizationRoutes);

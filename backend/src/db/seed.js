@@ -1,58 +1,105 @@
 const { PrismaClient } = require('@prisma/client');
-const { MODULES, getAllChaptersFlat } = require('./seedContent');
+const { getModulesWithChapters } = require('./academyChapters');
+const { getLabForChapter } = require('./chapterLabs');
+const { invalidateAcademyCache } = require('../services/academyCacheService');
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('🌱 Seeding AutoTune Academy (30 chapters × 5 modules)...');
+/**
+ * Guaranteed embeddable YouTube IDs — bare 11-char strings ONLY.
+ * Mapped exclusively to the first (Video Lecture) chapter of modules 2–5.
+ */
+const VERIFIED_MODULE_VIDEOS = {
+  'module-1': null,
+  'module-2': 'nS9n_Yj_P94', // Filtering & Sorting
+  'module-3': '9yeOJ0ZMUYw', // Joins (verified working)
+  'module-4': '0rB_P_shM8Y', // Aggregations
+  'module-5': '7S_tz1z_5bA', // Optimization
+  'module-6': null,
+};
 
-  // Clear dependent data
+const YOUTUBE_ID_RE = /^[a-zA-Z0-9_-]{11}$/;
+
+function normalizeVideoId(value) {
+  if (!value || typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (YOUTUBE_ID_RE.test(trimmed)) return trimmed;
+
+  const match =
+    trimmed.match(/(?:v=|\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/) ||
+    trimmed.match(/^([a-zA-Z0-9_-]{11})$/);
+  return match?.[1] && YOUTUBE_ID_RE.test(match[1]) ? match[1] : null;
+}
+
+function resolveChapterVideoUrl(ch, moduleId) {
+  if (ch.type !== 'VIDEO') return null;
+
+  const verifiedId = VERIFIED_MODULE_VIDEOS[moduleId];
+  if (!verifiedId) return null;
+
+  const fromChapter = normalizeVideoId(ch.videoUrl);
+  if (fromChapter && fromChapter === verifiedId) return fromChapter;
+
+  return verifiedId;
+}
+
+async function main() {
+  console.log('🌱 Seeding AutoTune LMS (verified YouTube IDs — bare ID strings only)...');
+
   await prisma.quizResult.deleteMany();
   await prisma.userProgress.deleteMany();
-  await prisma.quiz.deleteMany();
   await prisma.chapter.deleteMany();
   await prisma.course.deleteMany();
 
-  const allChapters = getAllChaptersFlat();
+  const modules = getModulesWithChapters();
 
-  for (const mod of MODULES) {
+  for (const mod of modules) {
     const course = await prisma.course.create({
-      data: {
-        id: mod.id,
-        title: mod.title,
-        description: mod.description,
-      },
+      data: { id: mod.id, title: mod.title, description: `${mod.title} learning track` },
     });
 
-    const moduleChapters = allChapters.filter((c) => c.moduleId === mod.id);
+    for (const ch of mod.chapters) {
+      const videoUrl = resolveChapterVideoUrl(ch, mod.id);
+      const lab = getLabForChapter(ch.globalOrder);
 
-    for (const ch of moduleChapters) {
-      const chapter = await prisma.chapter.create({
+      await prisma.chapter.create({
         data: {
           title: ch.title,
-          content: ch.content,
-          videoUrl: ch.videoUrl,
-          practiceSql: ch.practiceSql,
+          type: ch.type,
+          videoUrl,
+          theoryContent: ch.theoryContent,
+          practiceQuery: lab.practiceQuery,
+          expectedResult: lab.expectedResult,
+          quizData: ch.quizData,
           order: ch.order,
           globalOrder: ch.globalOrder,
           courseId: course.id,
         },
       });
 
-      await prisma.quiz.create({
-        data: {
-          chapterId: chapter.id,
-          questions: ch.quizQuestions,
-        },
-      });
+      if (ch.type === 'VIDEO') {
+        console.log(`    📺 Ch ${ch.globalOrder}: videoUrl="${videoUrl ?? 'null'}"`);
+      }
     }
 
-    console.log(`  ✓ ${mod.title} — ${moduleChapters.length} chapters`);
+    console.log(`  ✓ ${mod.title} — ${mod.chapters.length} chapters`);
   }
 
+  const videoChapters = await prisma.chapter.findMany({
+    where: { type: 'VIDEO' },
+    select: { globalOrder: true, title: true, videoUrl: true },
+    orderBy: { globalOrder: 'asc' },
+  });
+
+  console.log('\n📋 Verified video chapters:');
+  videoChapters.forEach((v) => {
+    console.log(`   ${v.globalOrder}. ${v.title} → ${v.videoUrl}`);
+  });
+
   const total = await prisma.chapter.count();
-  const quizzes = await prisma.quiz.count();
-  console.log(`✅ Seeded ${total} chapters and ${quizzes} quizzes (20 questions each)`);
+  await invalidateAcademyCache();
+  console.log(`\n✅ Seeded ${total} LMS chapters (Redis cache invalidated)`);
 }
 
 main()

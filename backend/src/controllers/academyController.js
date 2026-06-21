@@ -1,29 +1,49 @@
 const academyService = require('../services/academyService');
 
-const getCourses = async (req, res) => {
-  try {
-    res.json(await academyService.getCourses());
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
+/**
+ * Lightweight catalog — static chapter metadata from Redis + user progress join.
+ */
 const getCatalog = async (req, res) => {
   try {
-    const catalog = await academyService.getAcademyCatalog(req.user.id);
-    res.json(catalog);
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized — userId missing from token' });
+    }
+
+    const [chapters, progressSummary] = await Promise.all([
+      academyService.getAcademyCatalog(userId),
+      academyService.calculateProgress(userId),
+    ]);
+
+    const resumeOrder =
+      chapters.find((ch) => !ch.isCompleted)?.globalOrder ??
+      chapters[0]?.globalOrder ??
+      1;
+
+    res.json({
+      chapters,
+      resumeOrder,
+      userId,
+      totalProgress: progressSummary.percentage,
+      completedCount: progressSummary.completed,
+      totalChapters: progressSummary.total,
+    });
   } catch (error) {
-    console.error(error);
+    console.error('[academy] getCatalog', req.user?.id, error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-const getChapterByOrder = async (req, res) => {
+const getChapterContent = async (req, res) => {
   try {
-    const chapter = await academyService.getChapterByGlobalOrder(req.user.id, req.params.order);
-    if (!chapter) return res.status(404).json({ error: 'Chapter not found' });
-    res.json(chapter);
+    const userId = req.user.id;
+    const content = await academyService.getChapterContent(userId, req.params.id);
+
+    if (!content) {
+      return res.status(404).json({ error: 'Chapter not found' });
+    }
+
+    res.json(content);
   } catch (error) {
     if (error.code === 'CHAPTER_LOCKED') {
       return res.status(403).json({
@@ -32,120 +52,38 @@ const getChapterByOrder = async (req, res) => {
         redirectOrder: error.redirectOrder,
       });
     }
-    console.error(error);
+    console.error('[academy] getChapterContent', req.user?.id, error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-const getCourseById = async (req, res) => {
+const getChapterDetails = async (req, res) => {
   try {
-    const course = await academyService.getCourseById(req.params.courseId);
-    if (!course) return res.status(404).json({ error: 'Course not found' });
-    res.json(course);
+    const userId = req.user.id;
+    const chapter = await academyService.getChapterByGlobalOrder(userId, req.params.order);
+
+    if (!chapter) {
+      return res.status(404).json({ error: 'Chapter not found' });
+    }
+
+    res.json({
+      ...chapter,
+      isCompleted: Boolean(chapter.isCompleted ?? chapter.status?.isCompleted ?? false),
+    });
   } catch (error) {
-    console.error(error);
+    if (error.code === 'CHAPTER_LOCKED') {
+      return res.status(403).json({
+        error: error.message,
+        code: 'CHAPTER_LOCKED',
+        redirectOrder: error.redirectOrder,
+      });
+    }
+    console.error('[academy] getChapterDetails', req.user?.id, error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-const createCourse = async (req, res) => {
-  try {
-    const { title, description } = req.body;
-    res.status(201).json(await academyService.createCourse(title, description));
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const updateCourse = async (req, res) => {
-  try {
-    res.json(await academyService.updateCourse(req.params.courseId, req.body));
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const deleteCourse = async (req, res) => {
-  try {
-    await academyService.deleteCourse(req.params.courseId);
-    res.status(204).send();
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const getChapterById = async (req, res) => {
-  try {
-    const chapter = await academyService.getChapterById(req.params.chapterId);
-    if (!chapter) return res.status(404).json({ error: 'Chapter not found' });
-    res.json(chapter);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const createChapter = async (req, res) => {
-  try {
-    const { title, content, order, videoUrl, practiceSql, globalOrder } = req.body;
-    res.status(201).json(
-      await academyService.createChapter(req.params.courseId, title, content, order, videoUrl, practiceSql, globalOrder)
-    );
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const updateChapter = async (req, res) => {
-  try {
-    res.json(await academyService.updateChapter(req.params.chapterId, req.body));
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const deleteChapter = async (req, res) => {
-  try {
-    await academyService.deleteChapter(req.params.chapterId);
-    res.status(204).send();
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const createQuiz = async (req, res) => {
-  try {
-    res.status(201).json(await academyService.createQuiz(req.params.chapterId, req.body.questions));
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const updateQuiz = async (req, res) => {
-  try {
-    res.json(await academyService.updateQuiz(req.params.quizId, req.body.questions));
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const deleteQuiz = async (req, res) => {
-  try {
-    await academyService.deleteQuiz(req.params.quizId);
-    res.status(204).send();
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+const getChapterByOrder = getChapterDetails;
 
 const getProgress = async (req, res) => {
   try {
@@ -165,36 +103,116 @@ const getProgressDetails = async (req, res) => {
   }
 };
 
-const markWatched = async (req, res) => {
-  try {
-    res.json(await academyService.markWatched(req.user.id, req.params.chapterId));
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
-const markExerciseCompleted = async (req, res) => {
-  try {
-    res.json(await academyService.markExerciseCompleted(req.user.id, req.params.chapterId));
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
+/**
+ * Atomic progress upsert — on completion, recalculates master state from DB.
+ */
 const updateProgress = async (req, res) => {
   try {
-    res.json(await academyService.updateProgress(req.user.id, req.params.chapterId, req.body.status));
+    const userId = req.user.id;
+    const { chapterId } = req.params;
+    const { isCompleted, videoWatched, videoCompleted, quizScore, videoWatchPercent } = req.body;
+
+    const result = await academyService.updateProgress(userId, chapterId, {
+      isCompleted,
+      videoWatched,
+      videoWatchPercent,
+      videoCompleted,
+      quizScore,
+    });
+
+    res.json(result);
   } catch (error) {
-    console.error(error);
+    console.error('[academy] updateProgress', req.user?.id, error.message);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const getProgressSummary = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    res.json(await academyService.getProgressSummary(userId));
+  } catch (error) {
+    console.error('[academy] getProgressSummary', req.user?.id, error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const completeVideo = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { videoId, maxWatchPercent } = req.body;
+
+    if (!videoId || typeof videoId !== 'string') {
+      return res.status(400).json({ error: 'videoId is required' });
+    }
+
+    const result = await academyService.completeVideo(
+      userId,
+      req.params.chapterId,
+      videoId,
+      Number(maxWatchPercent) || 0
+    );
+    res.json(result);
+  } catch (error) {
+    console.error('[academy] completeVideo', req.user?.id, error.message);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const markVideoWatched = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { videoId, maxWatchPercent } = req.body;
+
+    if (!videoId || typeof videoId !== 'string') {
+      return res.status(400).json({ error: 'videoId is required' });
+    }
+
+    const result = await academyService.markVideoWatched(
+      userId,
+      req.params.chapterId,
+      videoId,
+      Number(maxWatchPercent) || 0
+    );
+    res.json(result);
+  } catch (error) {
+    console.error('[academy] markVideoWatched', req.user?.id, error.message);
+    res.status(400).json({ error: error.message });
   }
 };
 
 const submitQuiz = async (req, res) => {
   try {
-    res.json(await academyService.evaluateQuiz(req.user.id, req.params.quizId, req.body.answers));
+    const userId = req.user.id;
+    const { answers } = req.body;
+
+    if (!Array.isArray(answers)) {
+      return res.status(400).json({ error: 'answers array is required' });
+    }
+
+    const result = await academyService.submitQuiz(userId, req.params.chapterId, answers);
+    res.json(result);
+  } catch (error) {
+    console.error('[academy] submitQuiz', req.user?.id, error.message);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const failQuiz = async (req, res) => {
+  try {
+    const reason = req.body?.reason || 'focus_violation';
+    const result = await academyService.failQuiz(req.user.id, req.params.chapterId, reason);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const recordFocusViolation = async (req, res) => {
+  try {
+    const result = await academyService.recordFocusViolation(req.user.id, req.params.chapterId);
+    res.json(result);
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: error.message });
@@ -202,24 +220,17 @@ const submitQuiz = async (req, res) => {
 };
 
 module.exports = {
-  getCourses,
   getCatalog,
+  getChapterContent,
+  getChapterDetails,
   getChapterByOrder,
-  getCourseById,
-  createCourse,
-  updateCourse,
-  deleteCourse,
-  getChapterById,
-  createChapter,
-  updateChapter,
-  deleteChapter,
-  createQuiz,
-  updateQuiz,
-  deleteQuiz,
   getProgress,
+  getProgressSummary,
   getProgressDetails,
-  markWatched,
-  markExerciseCompleted,
   updateProgress,
+  completeVideo,
+  markVideoWatched,
   submitQuiz,
+  failQuiz,
+  recordFocusViolation,
 };

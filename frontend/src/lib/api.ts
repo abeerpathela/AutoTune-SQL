@@ -10,9 +10,7 @@ import type {
   OptimizationResult,
   DbConnection,
   User,
-  Course,
   Chapter,
-  Quiz,
   UserProgress,
   Certificate,
   QueryAnalysisError,
@@ -135,92 +133,127 @@ export const api = {
     localStorage.removeItem('token');
   },
 
-  // Academy endpoints (v1)
-  async getCourses(): Promise<Course[]> {
-    const response = await apiClient.get('/v1/academy/courses');
+  // Academy LMS endpoints (v1)
+  _catalogCache: null as import('../types').AcademyCatalogResponse | null,
+
+  invalidateAcademyCatalog() {
+    this._catalogCache = null;
+  },
+
+  async getAcademyCatalog(force = false): Promise<import('../types').AcademyCatalogResponse> {
+    if (this._catalogCache && !force) return this._catalogCache;
+    const response = await apiClient.get('/v1/academy/catalog');
+    this._catalogCache = response.data;
     return response.data;
   },
-  async getAcademyCatalog(): Promise<Chapter[]> {
-    const response = await apiClient.get('/v1/academy/catalog');
+
+  /** Optimistically mark a chapter complete in the in-memory catalog cache. */
+  optimisticCompleteChapter(chapterId: string) {
+    if (!this._catalogCache) return;
+    const wasComplete = this._catalogCache.chapters.find((c) => c.id === chapterId)?.isCompleted;
+    this._catalogCache = {
+      ...this._catalogCache,
+      chapters: this._catalogCache.chapters.map((ch) =>
+        ch.id === chapterId
+          ? {
+              ...ch,
+              isCompleted: true,
+              status: ch.status
+                ? { ...ch.status, isCompleted: true, state: 'Completed' as const }
+                : ch.status,
+              progress: ch.progress
+                ? { ...ch.progress, isCompleted: true, videoCompleted: true, videoWatched: true }
+                : ch.progress,
+            }
+          : ch
+      ),
+      completedCount: wasComplete
+        ? this._catalogCache.completedCount
+        : (this._catalogCache.completedCount ?? 0) + 1,
+    };
+  },
+
+  async getChapterContent(chapterId: string): Promise<import('../types').ChapterContent> {
+    const response = await apiClient.get(`/v1/academy/chapters/${chapterId}/content`);
     return response.data;
   },
   async getChapterByOrder(order: number): Promise<Chapter> {
     const response = await apiClient.get(`/v1/academy/chapters/by-order/${order}`);
     return response.data;
   },
-  async markChapterWatched(chapterId: string): Promise<void> {
-    await apiClient.post(`/v1/academy/progress/${chapterId}/watched`);
-  },
-  async markExerciseCompleted(chapterId: string): Promise<void> {
-    await apiClient.post(`/v1/academy/progress/${chapterId}/exercise`);
-  },
-  async getCourseById(id: string): Promise<Course> {
-    const response = await apiClient.get(`/v1/academy/courses/${id}`);
-    return response.data;
-  },
-  async createCourse(data: { title: string; description?: string }): Promise<Course> {
-    const response = await apiClient.post('/v1/academy/courses', data);
-    return response.data;
-  },
-  async updateCourse(id: string, data: Partial<Course>): Promise<Course> {
-    const response = await apiClient.put(`/v1/academy/courses/${id}`, data);
-    return response.data;
-  },
-  async deleteCourse(id: string): Promise<void> {
-    await apiClient.delete(`/v1/academy/courses/${id}`);
-  },
-
-  async getChapterById(id: string): Promise<Chapter> {
-    const response = await apiClient.get(`/v1/academy/chapters/${id}`);
-    return response.data;
-  },
-  async createChapter(courseId: string, data: Omit<Chapter, 'id' | 'createdAt' | 'updatedAt'>): Promise<Chapter> {
-    const response = await apiClient.post(`/v1/academy/courses/${courseId}/chapters`, data);
-    return response.data;
-  },
-  async updateChapter(id: string, data: Partial<Chapter>): Promise<Chapter> {
-    const response = await apiClient.put(`/v1/academy/chapters/${id}`, data);
-    return response.data;
-  },
-  async deleteChapter(id: string): Promise<void> {
-    await apiClient.delete(`/v1/academy/chapters/${id}`);
-  },
-
-  async createQuiz(chapterId: string, data: { questions: any }): Promise<Quiz> {
-    const response = await apiClient.post(`/v1/academy/chapters/${chapterId}/quizzes`, data);
-    return response.data;
-  },
-  async updateQuiz(id: string, data: { questions: any }): Promise<Quiz> {
-    const response = await apiClient.put(`/v1/academy/quizzes/${id}`, data);
-    return response.data;
-  },
-  async deleteQuiz(id: string): Promise<void> {
-    await apiClient.delete(`/v1/academy/quizzes/${id}`);
-  },
-
-  async getProgress(): Promise<{ percentage: number; completed: number; total: number }> {
+  async getProgress(): Promise<import('../types').AcademyProgress> {
     const response = await apiClient.get('/v1/academy/progress');
+    return response.data;
+  },
+  async getProgressSummary(): Promise<import('../types').ProgressMasterState> {
+    const response = await apiClient.get('/v1/academy/progress/summary');
+    return response.data;
+  },
+  async updateChapterProgress(
+    chapterId: string,
+    payload: {
+      isCompleted?: boolean;
+      videoWatched?: boolean;
+      videoCompleted?: boolean;
+      videoWatchPercent?: number;
+      quizScore?: number;
+    }
+  ): Promise<import('../types').ProgressMasterState & { progress: import('../types').ChapterProgressState }> {
+    const response = await apiClient.patch(`/v1/academy/chapters/${chapterId}/progress`, payload);
     return response.data;
   },
   async getProgressDetails(): Promise<UserProgress[]> {
     const response = await apiClient.get('/v1/academy/progress/details');
     return response.data;
   },
-  async updateProgress(chapterId: string, status: 'IN_PROGRESS' | 'COMPLETED'): Promise<UserProgress> {
-    const response = await apiClient.post(`/v1/academy/progress/${chapterId}`, { status });
+  async completeVideo(
+    chapterId: string,
+    videoId: string,
+    maxWatchPercent: number
+  ): Promise<
+    import('../types').ProgressMasterState & {
+      progress: import('../types').ChapterProgressState;
+      nextChapterId: string | null;
+    }
+  > {
+    const response = await apiClient.post(`/v1/academy/chapters/${chapterId}/complete-video`, {
+      videoId,
+      maxWatchPercent,
+    });
     return response.data;
   },
-
-  async evaluateQuiz(quizId: string, answers: number[]): Promise<{
-    score: number;
-    correct: number;
-    total: number;
-    passed: boolean;
-    passThreshold: number;
-    chapterCompleted: boolean;
-    nextChapterUnlocked: boolean;
+  async markVideoWatched(
+    chapterId: string,
+    videoId: string,
+    maxWatchPercent: number
+  ): Promise<{
+    progress: import('../types').ChapterProgressState;
   }> {
-    const response = await apiClient.post(`/v1/academy/quizzes/${quizId}/evaluate`, { answers });
+    const response = await apiClient.post(`/v1/academy/chapters/${chapterId}/video-watched`, {
+      videoId,
+      maxWatchPercent,
+    });
+    return response.data;
+  },
+  async submitChapterQuiz(
+    chapterId: string,
+    answers: number[]
+  ): Promise<import('../types').QuizSubmitResult> {
+    const response = await apiClient.post(`/v1/academy/chapters/${chapterId}/submit-quiz`, { answers });
+    return response.data;
+  },
+  async failQuiz(
+    chapterId: string,
+    reason = 'focus_violation'
+  ): Promise<import('../types').QuizSubmitResult> {
+    const response = await apiClient.post(`/v1/academy/chapters/${chapterId}/quiz/fail`, { reason });
+    return response.data;
+  },
+  async recordFocusViolation(chapterId: string): Promise<{
+    violationCount: number;
+    progress: import('../types').ChapterProgressState;
+  }> {
+    const response = await apiClient.post(`/v1/academy/chapters/${chapterId}/quiz/violation`);
     return response.data;
   },
 
@@ -244,6 +277,28 @@ export const api = {
   },
   async verifyCertificate(certId: string): Promise<{ valid: boolean; certificate?: any }> {
     const response = await apiClient.get(`/v1/certificates/verify/${certId}`);
+    return response.data;
+  },
+
+  async completeAcademyAdmin(): Promise<{
+    completedCount: number;
+    totalChapters: number;
+    progressPercent: number;
+    message: string;
+  }> {
+    const response = await apiClient.post('/v1/admin/complete-academy');
+    return response.data;
+  },
+
+  async completeAndCertifyAdmin(type?: string): Promise<{
+    completedCount: number;
+    totalChapters: number;
+    progressPercent: number;
+    certificate: Certificate;
+    certExisting: boolean;
+    message: string;
+  }> {
+    const response = await apiClient.post('/v1/admin/debug/complete-and-certify', { type });
     return response.data;
   },
 };

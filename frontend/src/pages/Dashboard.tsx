@@ -5,23 +5,22 @@ import { Zap, Database, Clock, Brain, ArrowRight, Award, GraduationCap } from 'l
 import { api } from '../lib/api';
 import { CircularProgress } from '../components/ui/CircularProgress';
 import { MagneticButton } from '../components/ui/InteractionLayer';
+import { useProgress } from '../contexts/ProgressContext';
 
 export const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [datasetStats, setDatasetStats] = useState<any>(null);
-  const [progress, setProgress] = useState<{ percentage: number; completed: number; total: number }>({ percentage: 0, completed: 0, total: 0 });
+  const { stats: academyProgress } = useProgress();
   const [certificates, setCertificates] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [stats, prog, certs] = await Promise.all([
+        const [stats, certs] = await Promise.all([
           api.getDatasetStats(),
-          api.getProgress().catch(() => ({ percentage: 0, completed: 0, total: 0 })),
           api.getMyCertificates().catch(() => []),
         ]);
         setDatasetStats(stats);
-        setProgress(prog);
         setCertificates(certs);
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
@@ -32,6 +31,12 @@ export const Dashboard = () => {
 
     fetchData();
   }, []);
+
+  const progress = {
+    percentage: academyProgress.progressPercent,
+    completed: academyProgress.completedCount,
+    total: academyProgress.totalChapters,
+  };
 
   const recentQueries = [
     { id: '1', query: 'SELECT * FROM orders o JOIN users u ON o.user_id = u.id', time: '2.3s', status: 'Optimized' },
@@ -106,7 +111,7 @@ export const Dashboard = () => {
           <div>
             <p className="text-sm text-violet-400 font-medium mb-1">Academy Progress</p>
             <h2 className="text-3xl font-bold text-zinc-100 mb-2">
-              {progress.completed} / {progress.total || 30} Chapters
+              {progress.completed} / {progress.total || 36} Chapters
             </h2>
             <p className="text-zinc-400">
               {progress.percentage >= 100

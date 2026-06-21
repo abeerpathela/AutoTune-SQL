@@ -3,6 +3,7 @@ import { Toaster } from 'sonner';
 import { InteractionLayer } from './components/ui/InteractionLayer';
 import { Navbar } from './components/layout/Navbar';
 import { AuthProvider } from './contexts/AuthContext';
+import { ProgressProvider } from './contexts/ProgressContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { OAuthTokenHandler } from './components/auth/OAuthTokenHandler';
 import { Landing } from './pages/Landing';
@@ -12,15 +13,19 @@ import { History } from './pages/History';
 import { MLStats } from './pages/MLStats';
 import { Connections } from './pages/Connections';
 import { Academy } from './pages/Academy';
+import { ChapterPage } from './pages/ChapterPage';
+import { QuizResult } from './pages/QuizResult';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Certificates } from './pages/Certificates';
+import { CertificateView } from './pages/CertificateView';
 import { motion } from 'framer-motion';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
+        <ProgressProvider>
         <div className="min-h-screen bg-[#030303] text-zinc-100 relative">
           <InteractionLayer />
           <Navbar />
@@ -61,10 +66,18 @@ function App() {
                   }
                 />
                 <Route
+                  path="/learn/chapter/:order/quiz-result"
+                  element={
+                    <ProtectedRoute>
+                      <QuizResult />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/learn/chapter/:order"
                   element={
                     <ProtectedRoute>
-                      <Academy />
+                      <ChapterPage />
                     </ProtectedRoute>
                   }
                 />
@@ -92,6 +105,8 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                <Route path="/certificate/:certId" element={<CertificateView />} />
+                <Route path="/verify/:certId" element={<CertificateView />} />
                 <Route
                   path="/certificates"
                   element={
@@ -113,6 +128,7 @@ function App() {
           </main>
           <Toaster position="top-right" />
         </div>
+        </ProgressProvider>
       </AuthProvider>
     </Router>
   );

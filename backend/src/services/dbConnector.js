@@ -125,8 +125,46 @@ async function runExplain(config, sql) {
   }
 }
 
+async function runSelectQuery(config, sql) {
+  const originalQuery = typeof sql === 'string' ? sql.trim() : '';
+  const cleanedSql = cleanSqlForValidation(originalQuery);
+
+  if (!cleanedSql) {
+    throw new Error('SQL query is required');
+  }
+
+  const dangerousKeyword = findDangerousKeyword(cleanedSql);
+  if (dangerousKeyword) {
+    throw new Error('Dangerous SQL operations are not allowed.');
+  }
+
+  if (!isReadOnlyQuery(cleanedSql)) {
+    throw new Error('Only SELECT, WITH, or EXPLAIN queries are allowed.');
+  }
+
+  const client = createClient(config);
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Query timeout')), TIMEOUT)
+  );
+
+  try {
+    await Promise.race([client.connect(), timeout]);
+    const result = await Promise.race([client.query(originalQuery), timeout]);
+
+    return {
+      success: true,
+      fields: result.fields.map((f) => f.name),
+      rows: result.rows,
+      rowCount: result.rowCount,
+    };
+  } finally {
+    await client.end().catch(() => {});
+  }
+}
+
 module.exports = {
   testConnection,
   getSchemaMetadata,
-  runExplain
+  runExplain,
+  runSelectQuery,
 };

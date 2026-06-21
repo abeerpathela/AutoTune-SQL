@@ -9,6 +9,43 @@ const {
 } = require('../utils/sqlCleaner');
 const { classifyPostgresError } = require('../utils/postgresErrorClassifier');
 
+const MAX_LAB_ROWS = 100;
+
+async function fetchQueryRows(originalQuery) {
+  const trimmed = originalQuery.trim();
+  const upper = trimmed.toUpperCase();
+
+  if (upper.startsWith('EXPLAIN')) {
+    const result = await prisma.$queryRawUnsafe(trimmed);
+    const rows = Array.isArray(result) ? result : [result];
+    return {
+      columns: rows[0] ? Object.keys(rows[0]) : ['QUERY PLAN'],
+      rows: rows.slice(0, MAX_LAB_ROWS),
+      rowCount: rows.length,
+    };
+  }
+
+  const limited = /\blimit\s+\d+/i.test(trimmed)
+    ? trimmed
+    : `${trimmed.replace(/;\s*$/, '')} LIMIT ${MAX_LAB_ROWS}`;
+
+  const result = await prisma.$queryRawUnsafe(limited);
+  const rows = Array.isArray(result) ? result : [result];
+  const serialized = rows.map((row) => {
+    const out = {};
+    for (const [k, v] of Object.entries(row)) {
+      out[k] = v instanceof Date ? v.toISOString() : v;
+    }
+    return out;
+  });
+
+  return {
+    columns: serialized[0] ? Object.keys(serialized[0]) : [],
+    rows: serialized,
+    rowCount: serialized.length,
+  };
+}
+
 function countNodes(plan, targetTypes) {
   let count = 0;
   if (plan['Node Type']) {
@@ -153,6 +190,14 @@ async function analyzeQuery(sql, connectionId = null) {
     const joinTypeCount = countNodes(plan, joinTypes);
 
     console.log(`✅ Classified as Performance Query, isSlow: ${isSlow}`);
+
+    let resultRows = null;
+    try {
+      resultRows = await fetchQueryRows(originalQuery);
+    } catch (rowErr) {
+      console.warn('[analyze] row fetch failed:', rowErr.message);
+    }
+
     return {
       originalQuery,
       explainPlan: fullExplainPlan,
@@ -170,6 +215,7 @@ async function analyzeQuery(sql, connectionId = null) {
       postgresError: null,
       logicFlaws: [],
       isSlow,
+      resultRows,
     };
   } catch (perfErr) {
     const classified = classifyPostgresError(perfErr);

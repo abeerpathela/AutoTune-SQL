@@ -1,4 +1,21 @@
-/** Academy content: 5 modules × 6 chapters = 30 lectures */
+/** Academy content: 5 modules × 6 chapters = 30 lectures
+ *  videoUrl stores ONLY the YouTube video ID (11 chars) — never full URLs.
+ */
+
+const VERIFIED_VIDEOS = {
+  SQL_INTRO: 'HXV3zeQKqGY',
+  MOSH_SQL: '7S_tz1z_5bA',
+  SELECT_WHERE: 'nS9n_Yj_P94',
+  JOINS: '9yeOJ0ZMUYw',
+  GROUP_BY: '0rB_P_shM8Y',
+  SUBQUERIES: '31rjXf6Y8ek',
+  INDEXING: '7S_tz1z_5bA',
+  AGGREGATES: '0rB_P_shM8Y',
+  TRANSACTIONS: 'HXV3zeQKqGY',
+  DATA_CLEANING: '8rO7zkBnGkY',
+  POSTGRESQL: 'qw--VYLpxG4',
+  DB_DESIGN: 'K6w0_6v06vA',
+};
 
 const MODULES = [
   {
@@ -6,12 +23,12 @@ const MODULES = [
     title: 'Module 1: SQL Fundamentals',
     description: 'Core relational concepts, SELECT projections, filtering, and operators.',
     chapters: [
-      { title: 'Introduction to SQL & Relational Databases', videoUrl: 'HXV3zeQKq0E', practiceSql: 'SELECT 1 AS hello_sql;' },
-      { title: 'SELECT Statements & Column Projection', videoUrl: 'Yr6jy1_rB9g', practiceSql: 'SELECT first_name, last_name, email FROM users;' },
-      { title: 'WHERE Clauses & Predicate Filtering', videoUrl: '2HVMiPPuPIM', practiceSql: "SELECT * FROM orders WHERE status = 'pending';" },
-      { title: 'Comparison & Logical Operators', videoUrl: '8mAITcNt710', practiceSql: 'SELECT * FROM products WHERE price > 50 AND stock > 0;' },
-      { title: 'ORDER BY, LIMIT & Result Shaping', videoUrl: '7mz73uXD9DA', practiceSql: 'SELECT * FROM users ORDER BY created_at DESC LIMIT 10;' },
-      { title: 'NULL Semantics & DISTINCT', videoUrl: '1wdIYud1X1Q', practiceSql: 'SELECT DISTINCT country FROM users WHERE country IS NOT NULL;' },
+      { title: 'Introduction to SQL & Relational Databases', videoUrl: VERIFIED_VIDEOS.SQL_INTRO, practiceSql: 'SELECT 1 AS hello_sql;' },
+      { title: 'SQL for Beginners — Core Syntax', videoUrl: VERIFIED_VIDEOS.MOSH_SQL, practiceSql: 'SELECT first_name, last_name, email FROM users;' },
+      { title: 'SELECT Statements & Column Projection', videoUrl: VERIFIED_VIDEOS.SELECT_WHERE, practiceSql: 'SELECT id, name, email FROM users LIMIT 10;' },
+      { title: 'WHERE Clauses & Predicate Filtering', videoUrl: VERIFIED_VIDEOS.SELECT_WHERE, practiceSql: "SELECT * FROM orders WHERE status = 'pending';" },
+      { title: 'Database Design Fundamentals', videoUrl: VERIFIED_VIDEOS.DB_DESIGN, practiceSql: 'SELECT u.name, o.total FROM users u JOIN orders o ON u.id = o.user_id;' },
+      { title: 'Comparison, ORDER BY & LIMIT', videoUrl: VERIFIED_VIDEOS.MOSH_SQL, practiceSql: 'SELECT * FROM products WHERE price > 50 ORDER BY price DESC LIMIT 10;' },
     ],
   },
   {
@@ -19,12 +36,12 @@ const MODULES = [
     title: 'Module 2: Intermediate SQL',
     description: 'Joins, aggregations, HAVING filters, and subquery patterns.',
     chapters: [
-      { title: 'INNER JOIN & Relationship Modeling', videoUrl: '7S_tz1z_5bA', practiceSql: 'SELECT u.name, o.total FROM users u INNER JOIN orders o ON u.id = o.user_id;' },
-      { title: 'LEFT, RIGHT & FULL Outer Joins', videoUrl: '9Pzj7Kl5mu0', practiceSql: 'SELECT u.name, o.id FROM users u LEFT JOIN orders o ON u.id = o.user_id;' },
-      { title: 'GROUP BY & Aggregate Functions', videoUrl: 'UgWvDM1C4zQ', practiceSql: 'SELECT category, COUNT(*) AS total FROM products GROUP BY category;' },
-      { title: 'HAVING & Post-Aggregation Filters', videoUrl: 'qw--VYLpxG4', practiceSql: 'SELECT user_id, SUM(total) AS spend FROM orders GROUP BY user_id HAVING SUM(total) > 500;' },
-      { title: 'Scalar & Correlated Subqueries', videoUrl: 'dBe5junJCJo', practiceSql: 'SELECT * FROM orders WHERE user_id IN (SELECT id FROM users WHERE country = \'US\');' },
-      { title: 'Common Table Expressions (CTEs)', videoUrl: '5Od0_9-RJVE', practiceSql: 'WITH recent AS (SELECT * FROM orders WHERE created_at > NOW() - INTERVAL \'7 days\') SELECT COUNT(*) FROM recent;' },
+      { title: 'INNER JOIN & Relationship Modeling', videoUrl: VERIFIED_VIDEOS.JOINS, practiceSql: 'SELECT u.name, o.total FROM users u INNER JOIN orders o ON u.id = o.user_id;' },
+      { title: 'LEFT, RIGHT & FULL Outer Joins', videoUrl: VERIFIED_VIDEOS.JOINS, practiceSql: 'SELECT u.name, o.id FROM users u LEFT JOIN orders o ON u.id = o.user_id;' },
+      { title: 'GROUP BY & Aggregate Functions', videoUrl: VERIFIED_VIDEOS.GROUP_BY, practiceSql: 'SELECT category, COUNT(*) AS total FROM products GROUP BY category;' },
+      { title: 'HAVING & Post-Aggregation Filters', videoUrl: VERIFIED_VIDEOS.GROUP_BY, practiceSql: 'SELECT user_id, SUM(total) AS spend FROM orders GROUP BY user_id HAVING SUM(total) > 500;' },
+      { title: 'Scalar & Correlated Subqueries', videoUrl: VERIFIED_VIDEOS.SUBQUERIES, practiceSql: "SELECT * FROM orders WHERE user_id IN (SELECT id FROM users WHERE country = 'US');" },
+      { title: 'Data Cleaning with SQL', videoUrl: VERIFIED_VIDEOS.DATA_CLEANING, practiceSql: "SELECT TRIM(name), LOWER(email) FROM users WHERE email IS NOT NULL;" },
     ],
   },
   {
@@ -32,12 +49,12 @@ const MODULES = [
     title: 'Module 3: Advanced SQL',
     description: 'Indexing strategies, transactional integrity, and window analytics.',
     chapters: [
-      { title: 'B-Tree Indexes & Seek Patterns', videoUrl: 'p3qvjclR_wI', practiceSql: 'EXPLAIN SELECT * FROM users WHERE email = \'admin@example.com\';' },
-      { title: 'Composite & Covering Indexes', videoUrl: 'r6q8Ehe2iEk', practiceSql: 'CREATE INDEX idx_orders_user_status ON orders(user_id, status);' },
-      { title: 'ACID Transactions & Isolation', videoUrl: 'TcvFyYHEtEo', practiceSql: 'BEGIN; UPDATE accounts SET balance = balance - 100 WHERE id = 1; COMMIT;' },
-      { title: 'Window Functions: ROW_NUMBER', videoUrl: 'H6OTMoXHTiY', practiceSql: 'SELECT *, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) AS rn FROM orders;' },
-      { title: 'RANK, DENSE_RANK & LAG/LEAD', videoUrl: 'W1qxKfKNy2E', practiceSql: 'SELECT user_id, total, LAG(total) OVER (PARTITION BY user_id ORDER BY created_at) AS prev_total FROM orders;' },
-      { title: 'Query Refactoring & Anti-Patterns', videoUrl: 'B-ssFGWv1Po', practiceSql: 'SELECT u.id FROM users u WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.id);' },
+      { title: 'B-Tree Indexes & Seek Patterns', videoUrl: VERIFIED_VIDEOS.INDEXING, practiceSql: "EXPLAIN SELECT * FROM users WHERE email = 'admin@example.com';" },
+      { title: 'Composite Indexes & Query Optimization', videoUrl: VERIFIED_VIDEOS.INDEXING, practiceSql: 'CREATE INDEX idx_orders_user_status ON orders(user_id, status);' },
+      { title: 'ACID Transactions & Isolation', videoUrl: VERIFIED_VIDEOS.TRANSACTIONS, practiceSql: 'BEGIN; UPDATE accounts SET balance = balance - 100 WHERE id = 1; COMMIT;' },
+      { title: 'Aggregate Functions Deep Dive', videoUrl: VERIFIED_VIDEOS.AGGREGATES, practiceSql: 'SELECT user_id, AVG(total), MAX(total) FROM orders GROUP BY user_id;' },
+      { title: 'Window Functions & Analytics', videoUrl: VERIFIED_VIDEOS.MOSH_SQL, practiceSql: 'SELECT *, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) AS rn FROM orders;' },
+      { title: 'Query Refactoring & Anti-Patterns', videoUrl: VERIFIED_VIDEOS.SUBQUERIES, practiceSql: 'SELECT u.id FROM users u WHERE EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.id);' },
     ],
   },
   {
@@ -45,12 +62,12 @@ const MODULES = [
     title: 'Module 4: PostgreSQL Mastery',
     description: 'Vacuum mechanics, MVCC internals, and EXPLAIN plan literacy.',
     chapters: [
-      { title: 'VACUUM, Autovacuum & Bloat Control', videoUrl: '2aEo2s7UwDM', practiceSql: 'SELECT relname, n_dead_tup FROM pg_stat_user_tables ORDER BY n_dead_tup DESC;' },
-      { title: 'MVCC & Tuple Visibility', videoUrl: '4q5y0FGJ1I8', practiceSql: 'SELECT xmin, xmax, * FROM users LIMIT 5;' },
-      { title: 'Reading EXPLAIN (FORMAT JSON)', videoUrl: '7CqJlxBYj-M', practiceSql: 'EXPLAIN (FORMAT JSON) SELECT * FROM orders WHERE status = \'shipped\';' },
-      { title: 'EXPLAIN ANALYZE & Runtime Stats', videoUrl: '3vJwXP8x8e8', practiceSql: 'EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE user_id = 1;' },
-      { title: 'Sequential vs Index Scan Trade-offs', videoUrl: 'k2h4z6l-Jnw', practiceSql: 'EXPLAIN SELECT * FROM orders WHERE id = 42;' },
-      { title: 'Statistics, ANALYZE & Planner Tuning', videoUrl: '0n3TEFW2YxA', practiceSql: 'ANALYZE orders; EXPLAIN SELECT * FROM orders WHERE status = \'pending\';' },
+      { title: 'PostgreSQL Architecture Overview', videoUrl: VERIFIED_VIDEOS.POSTGRESQL, practiceSql: 'SELECT version();' },
+      { title: 'MVCC & Tuple Visibility', videoUrl: VERIFIED_VIDEOS.POSTGRESQL, practiceSql: 'SELECT xmin, xmax, * FROM users LIMIT 5;' },
+      { title: 'Reading EXPLAIN Plans', videoUrl: VERIFIED_VIDEOS.POSTGRESQL, practiceSql: "EXPLAIN (FORMAT JSON) SELECT * FROM orders WHERE status = 'shipped';" },
+      { title: 'EXPLAIN ANALYZE & Runtime Stats', videoUrl: VERIFIED_VIDEOS.INDEXING, practiceSql: 'EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM orders WHERE user_id = 1;' },
+      { title: 'Indexes & Performance Tuning', videoUrl: VERIFIED_VIDEOS.INDEXING, practiceSql: 'EXPLAIN SELECT * FROM orders WHERE id = 42;' },
+      { title: 'Statistics, ANALYZE & Planner Tuning', videoUrl: VERIFIED_VIDEOS.INDEXING, practiceSql: "ANALYZE orders; EXPLAIN SELECT * FROM orders WHERE status = 'pending';" },
     ],
   },
   {
@@ -58,12 +75,12 @@ const MODULES = [
     title: 'Module 5: AutoTune Mastery',
     description: 'Production optimization workflows with the AutoTune-SQL engine.',
     chapters: [
-      { title: 'AutoTune Optimizer Architecture', videoUrl: 'nVjQ0l29lGg', practiceSql: 'SELECT * FROM users u JOIN orders o ON u.id = o.user_id;' },
-      { title: 'ML Risk Scoring & Slowness Prediction', videoUrl: 'aircAruvnKk', practiceSql: 'EXPLAIN ANALYZE SELECT * FROM orders WHERE created_at > NOW() - INTERVAL \'30 days\';' },
-      { title: 'AI Query Rewriting Fundamentals', videoUrl: 'JcXKbZVx4U0', practiceSql: 'SELECT DISTINCT user_id FROM orders WHERE total > 100;' },
-      { title: 'Schema Error vs Syntax Classification', videoUrl: 'zsjvFFoaOAs', practiceSql: 'SELECT name FROM users WHERE active = true;' },
-      { title: 'Production Read-Only Guardrails', videoUrl: 'kuf6aHt6B-w', practiceSql: 'SELECT id, email FROM users LIMIT 100;' },
-      { title: 'Certification Capstone & Best Practices', videoUrl: 'HXV3zeQKq0E', practiceSql: 'WITH ranked AS (SELECT *, ROW_NUMBER() OVER (ORDER BY total DESC) rn FROM orders) SELECT * FROM ranked WHERE rn <= 5;' },
+      { title: 'AutoTune Optimizer Architecture', videoUrl: VERIFIED_VIDEOS.SQL_INTRO, practiceSql: 'SELECT * FROM users u JOIN orders o ON u.id = o.user_id;' },
+      { title: 'ML Risk Scoring & Slowness Prediction', videoUrl: VERIFIED_VIDEOS.INDEXING, practiceSql: "EXPLAIN ANALYZE SELECT * FROM orders WHERE created_at > NOW() - INTERVAL '30 days';" },
+      { title: 'AI Query Rewriting Fundamentals', videoUrl: VERIFIED_VIDEOS.DATA_CLEANING, practiceSql: 'SELECT DISTINCT user_id FROM orders WHERE total > 100;' },
+      { title: 'Schema Error vs Syntax Classification', videoUrl: VERIFIED_VIDEOS.DATA_CLEANING, practiceSql: 'SELECT name FROM users WHERE active = true;' },
+      { title: 'Production Read-Only Guardrails', videoUrl: VERIFIED_VIDEOS.DB_DESIGN, practiceSql: 'SELECT id, email FROM users LIMIT 100;' },
+      { title: 'Certification Capstone & Best Practices', videoUrl: VERIFIED_VIDEOS.POSTGRESQL, practiceSql: 'WITH ranked AS (SELECT *, ROW_NUMBER() OVER (ORDER BY total DESC) rn FROM orders) SELECT * FROM ranked WHERE rn <= 5;' },
     ],
   },
 ];
@@ -129,6 +146,20 @@ function buildQuizQuestions(chapterTitle, moduleTitle) {
   }));
 }
 
+function normalizeVideoId(value) {
+  if (!value || typeof value !== 'string') return value;
+  const trimmed = value.trim();
+
+  const urlMatch = trimmed.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  if (urlMatch) return urlMatch[1];
+
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+
+  return trimmed;
+}
+
 function getAllChaptersFlat() {
   const flat = [];
   let globalOrder = 1;
@@ -140,7 +171,7 @@ function getAllChaptersFlat() {
         order: idx + 1,
         globalOrder: globalOrder++,
         title: ch.title,
-        videoUrl: ch.videoUrl,
+        videoUrl: normalizeVideoId(ch.videoUrl),
         practiceSql: ch.practiceSql,
         content: buildSummary(mod.title, ch.title),
         quizQuestions: buildQuizQuestions(ch.title, mod.title),
@@ -150,4 +181,4 @@ function getAllChaptersFlat() {
   return flat;
 }
 
-module.exports = { MODULES, getAllChaptersFlat, buildQuizQuestions, buildSummary };
+module.exports = { MODULES, VERIFIED_VIDEOS, getAllChaptersFlat, buildQuizQuestions, buildSummary, normalizeVideoId };

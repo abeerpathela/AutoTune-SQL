@@ -8,126 +8,121 @@ datasource db {
 }
 
 model User {
-  id           String          @id @default(uuid())
-  email        String          @unique
-  password     String?
-  githubId     String?         @unique
-  role         Role            @default(USER)
-  avatar       String?
-  isVerified   Boolean         @default(false)
-  firstName    String?
-  lastName     String?
-  queryLogs    QueryLog[]
+  id            String          @id @default(uuid())
+  email         String          @unique
+  password      String?
+  githubId      String?         @unique
+  role          Role            @default(USER)
+  avatar        String?
+  isVerified    Boolean         @default(false)
+  firstName     String?
+  lastName      String?
+  queryLogs     QueryLog[]
   dbConnections DbConnection[]
-  progress     UserProgress[]
-  quizResults  QuizResult[]
-  certificates Certificate[]
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  progress      UserProgress[]
+  quizResults   QuizResult[]
+  certificates  Certificate[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@map("users")
 }
 
 model DbConnection {
-  id          String     @id @default(uuid())
-  name        String
-  host        String
-  port        Int        @default(5432)
-  database    String
-  username    String
-  password    String
-  createdAt   DateTime   @default(now())
-  userId      String?
-  user        User?      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  queryLogs   QueryLog[]
+  id        String     @id @default(uuid())
+  name      String
+  host      String
+  port      Int        @default(5432)
+  database  String
+  username  String
+  password  String
+  createdAt DateTime   @default(now())
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  queryLogs QueryLog[]
 
   @@map("db_connections")
 }
 
 model QueryLog {
-  id               String         @id @default(uuid())
-  originalQuery    String
-  optimizedQuery   String?
-  executionTime    Float?
-  isSlow           Boolean        @default(false)
-  explainPlan      Json?
-  isSyntaxValid    Boolean?
-  errorCategory    String?
-  postgresError    String?
-  joinTypeCount    Int            @default(0)
-  logicFlaws       Json?
-  explanation      String?
-  connectionId     String?
-  connection       DbConnection?  @relation(fields: [connectionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId           String?
-  user             User?          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  createdAt        DateTime       @default(now())
+  id              String         @id @default(uuid())
+  originalQuery   String
+  optimizedQuery  String?
+  executionTime   Float?
+  isSlow          Boolean        @default(false)
+  explainPlan     Json?
+  isSyntaxValid   Boolean?
+  errorCategory   String?
+  postgresError   String?
+  joinTypeCount   Int            @default(0)
+  logicFlaws      Json?
+  explanation     String?
+  connectionId    String?
+  connection      DbConnection?  @relation(fields: [connectionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId          String?
+  user            User?          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt       DateTime       @default(now())
 }
 
 model MLModelStats {
-  id                Int      @id @default(autoincrement())
-  success           Boolean  @default(false)
-  accuracy          Float?
-  recordCount       Int?
+  id                 Int      @id @default(autoincrement())
+  success            Boolean  @default(false)
+  accuracy           Float?
+  recordCount        Int?
   performanceRecords Int?
-  syntaxRecords     Int?
-  logicRecords      Int?
-  unknownRecords    Int?
-  confusionMatrix   Json?
-  message           String?
-  updatedAt         DateTime @updatedAt
+  syntaxRecords      Int?
+  logicRecords       Int?
+  unknownRecords     Int?
+  confusionMatrix    Json?
+  message            String?
+  updatedAt          DateTime @updatedAt
 }
 
 model Course {
-  id        String    @id @default(uuid())
-  title     String
+  id          String    @id @default(uuid())
+  title       String
   description String?
-  chapters Chapter[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  chapters    Chapter[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Chapter {
-  id          String         @id @default(uuid())
-  title       String
-  content     String
-  videoUrl    String?
-  practiceSql String?
-  order       Int
-  globalOrder Int            @unique
-  courseId    String
-  course      Course         @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  quiz        Quiz?
-  progress    UserProgress[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id             String         @id @default(uuid())
+  title          String
+  type           ChapterType    @default(THEORY)
+  videoUrl       String?
+  theoryContent  String         @db.Text
+  practiceQuery  String?
+  expectedResult Json?
+  quizData       Json
+  order          Int
+  globalOrder    Int            @unique
+  courseId       String
+  course         Course         @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  progress       UserProgress[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   @@unique([courseId, order])
 }
 
-model Quiz {
-  id          String       @id @default(uuid())
-  chapterId   String       @unique
-  chapter     Chapter      @relation(fields: [chapterId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  questions   Json
-  results     QuizResult[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-}
-
 model UserProgress {
-  id                String         @id @default(uuid())
-  userId            String
-  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  chapterId         String
-  chapter           Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  status            ProgressStatus @default(IN_PROGRESS)
-  isWatched         Boolean        @default(false)
-  exerciseCompleted Boolean        @default(false)
-  quizScore         Float?
-  isUnlocked        Boolean        @default(false)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  chapterId        String
+  chapter          Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  videoWatched     Boolean  @default(false)
+  videoWatchPercent Int     @default(0)
+  videoCompleted   Boolean  @default(false)
+  quizScore        Int?
+  quizAttempts     Int      @default(0)
+  focusViolations  Int      @default(0)
+  isCompleted      Boolean  @default(false)
+  isUnlocked       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@unique([userId, chapterId])
 }
@@ -136,23 +131,24 @@ model QuizResult {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  quizId    String
-  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  score     Float
+  chapterId String
+  score     Int
   createdAt DateTime @default(now())
 
-  @@unique([userId, quizId])
+  @@unique([userId, chapterId])
 }
 
 model Certificate {
-  id              String   @id @default(uuid())
-  certificateId   String   @unique
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  type            String
-  issueDate       DateTime @default(now())
+  id               String   @id @default(uuid())
+  certificateId    String   @unique
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  type             String
+  issueDate        DateTime @default(now())
   verificationLink String
-  createdAt       DateTime @default(now())
+  createdAt        DateTime @default(now())
+
+  @@unique([userId, type])
 }
 
 enum Role {
@@ -160,7 +156,7 @@ enum Role {
   ADMIN
 }
 
-enum ProgressStatus {
-  IN_PROGRESS
-  COMPLETED
+enum ChapterType {
+  VIDEO
+  THEORY
 }

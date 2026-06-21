@@ -1,267 +1,307 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, Download, ExternalLink, Lock, X } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { Award, Download, ExternalLink, Linkedin, Lock, Sparkles } from 'lucide-react';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
-import Logo from '../assets/WEBSITE_LOGO.svg';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  generateCertificatePdf,
+  getLinkedInShareUrl,
+} from '../services/certificateService';
+import type { Certificate } from '../types';
 
-const TOTAL_CHAPTERS = 30;
+const TOTAL_CHAPTERS = 36;
+const CERT_TITLE = 'SQL Optimization Specialist';
 
-function CertificatePreview({
-  name,
-  certId,
-  previewRef,
+function CertificateCard({
+  cert,
+  displayName,
+  index,
 }: {
-  name: string;
-  certId: string;
-  previewRef: React.RefObject<HTMLDivElement | null>;
+  cert: Certificate;
+  displayName: string;
+  index: number;
+}) {
+  const [downloading, setDownloading] = useState(false);
+  const verifyUrl =
+    cert.verificationLink || `${window.location.origin}/verify/${cert.certificateId}`;
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      await api.downloadCertificate(cert.id);
+      toast.success('Certificate PDF downloaded.');
+    } catch {
+      try {
+        await generateCertificatePdf({
+          userName: displayName,
+          certificateId: cert.certificateId,
+          verificationLink: verifyUrl,
+          issueDate: cert.issueDate,
+        });
+        toast.success('Certificate PDF downloaded.');
+      } catch {
+        toast.error('Failed to download certificate.');
+      }
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleShareLinkedIn = () => {
+    window.open(getLinkedInShareUrl(verifyUrl), '_blank', 'noopener,noreferrer');
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08, duration: 0.4 }}
+      className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-[0_0_40px_-12px_rgba(139,92,246,0.25)]"
+    >
+      <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full bg-violet-600/10 blur-3xl transition-opacity group-hover:opacity-100 opacity-60" />
+      <div className="pointer-events-none absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
+
+      <div className="relative flex items-start justify-between gap-4 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-emerald-500/20 border border-zinc-700/60">
+            <Award className="h-6 w-6 text-amber-400" />
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Verified Credential</p>
+            <h3 className="text-xl font-semibold text-zinc-50">{CERT_TITLE}</h3>
+          </div>
+        </div>
+        <Sparkles className="h-5 w-5 text-violet-400/70" />
+      </div>
+
+      <p className="relative text-sm text-zinc-400 mb-1">
+        Issued on{' '}
+        <span className="text-zinc-200">
+          {new Date(cert.issueDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </span>
+      </p>
+      <p className="relative text-xs font-mono text-zinc-600 mb-6 break-all">{cert.certificateId}</p>
+
+      <div className="relative flex flex-wrap gap-2">
+        <button
+          onClick={() => void handleDownload()}
+          disabled={downloading}
+          className="inline-flex flex-1 min-w-[140px] items-center justify-center gap-2 rounded-xl bg-zinc-100 px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-white disabled:opacity-50 transition-colors"
+        >
+          {downloading ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-400 border-t-zinc-900" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          Download PDF
+        </button>
+        <button
+          onClick={handleShareLinkedIn}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/60 px-4 py-2.5 text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
+        >
+          <Linkedin className="h-4 w-4" />
+          Share on LinkedIn
+        </button>
+        <a
+          href={verifyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center rounded-xl border border-zinc-800 px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:border-zinc-600 transition-colors"
+          aria-label="View verification page"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </a>
+      </div>
+    </motion.div>
+  );
+}
+
+function LockedView({
+  progress,
+  resumeOrder,
+  onContinue,
+}: {
+  progress: import('../types').AcademyProgress;
+  resumeOrder: number;
+  onContinue: () => void;
 }) {
   return (
-    <div
-      ref={previewRef}
-      className="w-[900px] h-[600px] bg-zinc-950 border-8 border-zinc-700 rounded-lg p-12 flex flex-col items-center justify-between"
-      style={{ fontFamily: 'Georgia, serif' }}
+    <motion.div
+      key="locked"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.35 }}
+      className="space-y-8"
     >
-      <div className="w-full flex items-center justify-between">
-        <img src={Logo} alt="AutoTune-SQL" className="h-14" />
-        <p className="text-xs text-zinc-500 font-mono">{certId}</p>
-      </div>
-      <div className="text-center space-y-4">
-        <p className="text-sm uppercase tracking-[0.3em] text-violet-400">Certificate of Mastery</p>
-        <h1 className="text-4xl font-bold text-zinc-100">SQL Optimization Professional</h1>
-        <p className="text-zinc-400">This certifies that</p>
-        <p className="text-3xl text-violet-300 font-semibold">{name}</p>
-        <p className="text-zinc-400 max-w-lg mx-auto">
-          has successfully completed all 30 chapters of the AutoTune-SQL Academy with ≥80% quiz proficiency
+      <div className="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-6">
+        <div className="mb-2 flex justify-between text-sm text-zinc-400">
+          <span>Academy Progress</span>
+          <span className="font-semibold text-violet-300">{progress.percentage}%</span>
+        </div>
+        <div className="h-3 overflow-hidden rounded-full bg-zinc-800">
+          <motion.div
+            className="h-full bg-gradient-to-r from-violet-600 to-emerald-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress.percentage}%` }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          />
+        </div>
+        <p className="mt-3 text-sm text-zinc-500">
+          {progress.completed}/{progress.total || TOTAL_CHAPTERS} chapters completed
         </p>
       </div>
-      <div className="w-full flex items-end justify-between border-t border-zinc-800 pt-6">
-        <div>
-          <p className="text-xs text-zinc-500">Issued {new Date().toLocaleDateString()}</p>
-          <p className="text-sm text-zinc-300 mt-1 italic">Verified by AutoTune-SQL ML Engine</p>
-        </div>
-        <Award className="w-12 h-12 text-amber-400" />
+
+      <div className="spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-12 text-center">
+        <Lock className="mx-auto mb-4 h-16 w-16 text-zinc-600" />
+        <h3 className="mb-2 text-xl font-semibold text-zinc-100">Certification Locked</h3>
+        <p className="mb-4 text-zinc-400">
+          Complete all {TOTAL_CHAPTERS} academy chapters with ≥80% quiz scores to earn your official
+          certificate.
+        </p>
+        <p className="mb-6 text-2xl font-bold text-violet-400">
+          {progress.completed} / {progress.total || TOTAL_CHAPTERS}
+        </p>
+        <button
+          onClick={onContinue}
+          className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-2.5 font-semibold text-white hover:bg-violet-600 transition-colors"
+        >
+          Continue Learning
+          <span className="text-xs text-violet-200">→ Ch {resumeOrder}</span>
+        </button>
       </div>
-    </div>
+    </motion.div>
+  );
+}
+
+function EarnedView({
+  certificates,
+  displayName,
+}: {
+  certificates: Certificate[];
+  displayName: string;
+}) {
+  return (
+    <motion.div
+      key="earned"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.35 }}
+      className="space-y-6"
+    >
+      <div>
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl font-bold text-zinc-100"
+        >
+          Your Achievements
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mt-2 text-lg text-zinc-400"
+        >
+          {certificates.length === 1
+            ? 'You have earned your official AutoTune-SQL certification.'
+            : `${certificates.length} verified credentials on record.`}
+        </motion.p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {certificates.map((cert, index) => (
+          <CertificateCard
+            key={cert.id}
+            cert={cert}
+            displayName={displayName}
+            index={index}
+          />
+        ))}
+      </div>
+    </motion.div>
   );
 }
 
 export const Certificates = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [certificates, setCertificates] = useState<any[]>([]);
-  const [progress, setProgress] = useState({ completed: 0, total: TOTAL_CHAPTERS, percentage: 0 });
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [progress, setProgress] = useState<import('../types').AcademyProgress>({
+    completed: 0,
+    total: TOTAL_CHAPTERS,
+    percentage: 0,
+  });
+  const [resumeOrder, setResumeOrder] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
-  const [showLockedModal, setShowLockedModal] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
 
   const displayName =
     user?.firstName && user?.lastName
       ? `${user.firstName} ${user.lastName}`
       : user?.email || 'AutoTune Graduate';
 
+  const hasCertificates = !loading && certificates.length > 0;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [certs, prog] = await Promise.all([api.getMyCertificates(), api.getProgress()]);
+        const [certs, prog, catalog] = await Promise.all([
+          api.getMyCertificates(),
+          api.getProgress(),
+          api.getAcademyCatalog().catch(() => null),
+        ]);
         setCertificates(certs);
         setProgress(prog);
+
+        if (catalog?.chapters?.length) {
+          const sorted = [...catalog.chapters].sort(
+            (a, b) => (a.globalOrder ?? 0) - (b.globalOrder ?? 0)
+          );
+          const firstIncomplete = sorted.find((ch) => ch.isCompleted !== true);
+          setResumeOrder(
+            firstIncomplete?.globalOrder ?? catalog.resumeOrder ?? 1
+          );
+        }
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    void fetchData();
   }, []);
 
-  const downloadPdfFromPreview = async (certId: string) => {
-    if (!previewRef.current) return;
-    const canvas = await html2canvas(previewRef.current, { scale: 2, backgroundColor: '#09090b' });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [900, 600] });
-    pdf.addImage(imgData, 'PNG', 0, 0, 900, 600);
-    pdf.save(`AutoTune-Certificate-${certId}.pdf`);
+  const handleContinueLearning = () => {
+    navigate(`/learn/chapter/${resumeOrder}`);
   };
 
-  const handleUnlockCertification = async () => {
-    if (progress.completed < progress.total || progress.percentage < 100) {
-      setShowLockedModal(true);
-      return;
-    }
-
-    setGenerating(true);
-    try {
-      const cert = await api.generateCertificate('SQL Optimization Professional');
-      setCertificates([cert, ...certificates]);
-      const certId = cert.certificateId || cert.id;
-      await new Promise((r) => setTimeout(r, 300));
-      await downloadPdfFromPreview(certId);
-      toast.success('Certification unlocked and PDF downloaded!');
-    } catch (err: unknown) {
-      const message =
-        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        (err as Error)?.message ||
-        'Failed to generate certificate';
-      toast.error(message);
-      if (message.includes('complete')) setShowLockedModal(true);
-    } finally {
-      setGenerating(false);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-10 w-64 animate-pulse rounded-lg bg-zinc-800/50" />
+        <div className="h-64 animate-shimmer rounded-2xl bg-zinc-800/40" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Hidden render target for PDF */}
-      <div className="fixed -left-[9999px] top-0">
-        <CertificatePreview
-          name={displayName}
-          certId={`AT-SQL-PREVIEW-${Date.now()}`}
-          previewRef={previewRef}
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <div>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold text-zinc-100 mb-2"
-          >
-            Your Certification
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg text-zinc-400"
-          >
-            {progress.completed}/{progress.total || TOTAL_CHAPTERS} chapters completed ({progress.percentage}%)
-          </motion.p>
-        </div>
-        <button
-          onClick={handleUnlockCertification}
-          disabled={generating}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-violet-500 text-white font-semibold hover:bg-violet-600 disabled:opacity-50 transition-colors"
-        >
-          {generating ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : progress.percentage >= 100 ? (
-            <Award className="w-5 h-5" />
-          ) : (
-            <Lock className="w-5 h-5" />
-          )}
-          {generating ? 'Generating...' : 'Unlock My Certification'}
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="animate-shimmer h-64 bg-zinc-800/40 rounded-2xl" />
-      ) : certificates.length === 0 ? (
-        <div className="spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-12 text-center">
-          <Lock className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-zinc-100 mb-2">Certification Locked</h3>
-          <p className="text-zinc-400 mb-6">
-            Complete all {TOTAL_CHAPTERS} academy chapters with ≥80% quiz scores to unlock your certificate.
-          </p>
-          <p className="text-2xl font-bold text-violet-400 mb-6">
-            {progress.completed} / {progress.total || TOTAL_CHAPTERS}
-          </p>
-          <button
-            onClick={() => navigate('/learn/chapter/1')}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-500 text-white font-semibold hover:bg-violet-600"
-          >
-            Continue Learning
-          </button>
-        </div>
+    <AnimatePresence mode="wait">
+      {hasCertificates ? (
+        <EarnedView certificates={certificates} displayName={displayName} />
       ) : (
-        <div className="grid md:grid-cols-2 gap-6">
-          {certificates.map((cert, index) => (
-            <motion.div
-              key={cert.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-6"
-            >
-              <div className="flex items-start gap-4 mb-4">
-                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
-                  <Award className="w-6 h-6 text-yellow-900" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-zinc-100">{cert.type}</h3>
-                  <p className="text-sm text-zinc-500">Issued {new Date(cert.issueDate).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <p className="text-xs text-zinc-600 font-mono mb-4 break-all">{cert.certificateId}</p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => api.downloadCertificate(cert.id)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-zinc-800/40 text-zinc-100 hover:bg-zinc-700/40 text-sm"
-                >
-                  <Download className="w-4 h-4" />
-                  Server PDF
-                </button>
-                <button
-                  onClick={() => downloadPdfFromPreview(cert.certificateId)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 text-sm"
-                >
-                  <Download className="w-4 h-4" />
-                  Client PDF
-                </button>
-                <button
-                  onClick={() => window.open(cert.verificationLink, '_blank')}
-                  className="px-4 py-2 rounded-xl bg-zinc-800/40 text-zinc-400 hover:text-zinc-100"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <LockedView
+          progress={progress}
+          resumeOrder={resumeOrder}
+          onContinue={handleContinueLearning}
+        />
       )}
-
-      <AnimatePresence>
-        {showLockedModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              className="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900 p-8 relative"
-            >
-              <button
-                onClick={() => setShowLockedModal(false)}
-                className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-zinc-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <Lock className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-zinc-100 text-center mb-2">⚠️ Certification Locked</h3>
-              <p className="text-zinc-400 text-center mb-6">
-                You have completed {progress.completed}/{progress.total || TOTAL_CHAPTERS} chapters. Pass all quizzes
-                with ≥80% to unlock your certification.
-              </p>
-              <Link
-                to="/learn/chapter/1"
-                onClick={() => setShowLockedModal(false)}
-                className="block w-full text-center py-3 rounded-xl bg-violet-500 text-white font-semibold hover:bg-violet-600"
-              >
-                Continue Learning
-              </Link>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    </AnimatePresence>
   );
 };
