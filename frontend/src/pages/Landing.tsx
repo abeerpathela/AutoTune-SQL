@@ -6,6 +6,8 @@ import { MagneticButton } from '../components/ui/InteractionLayer';
 import { SpotlightCard } from '../components/ui/SpotlightCard';
 import { Logo } from '../components/brand/Logo';
 import { BRAND } from '../lib/brand';
+import { useAuth } from '../contexts/AuthContext';
+import { buildLoginPath } from '../lib/redirect';
 
 function WordReveal({ text, className = '' }: { text: string; className?: string }) {
   const words = text.split(' ');
@@ -145,6 +147,15 @@ function FloatingSqlBlock() {
 
 export const Landing = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const goToProtectedRoute = (path: string) => {
+    if (user) {
+      navigate(path);
+      return;
+    }
+    navigate(buildLoginPath(path));
+  };
 
   return (
     <div className="relative z-10 flex min-h-screen flex-col">
@@ -190,8 +201,10 @@ export const Landing = () => {
                 transition={{ duration: 0.5, delay: 0.7 }}
                 className="flex flex-wrap items-center gap-4"
               >
-                <MagneticButton onClick={() => navigate('/optimizer')}>Get Started</MagneticButton>
-                <MagneticButton variant="secondary" onClick={() => navigate('/learn')}>
+                <MagneticButton onClick={() => goToProtectedRoute('/optimizer')}>
+                  Get Started
+                </MagneticButton>
+                <MagneticButton variant="secondary" onClick={() => goToProtectedRoute('/learn')}>
                   Open Academy
                 </MagneticButton>
               </motion.div>

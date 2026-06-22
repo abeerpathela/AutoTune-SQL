@@ -1,7 +1,4 @@
-import axios from 'axios';
-import type { AxiosInstance, AxiosResponse } from 'axios';
-import { toast } from 'sonner';
-import { config } from './config';
+import { apiClient } from '../api/apiClient';
 import type {
   QueryLog,
   DatasetStats,
@@ -15,35 +12,6 @@ import type {
   Certificate,
   QueryAnalysisError,
 } from '../types';
-
-const apiClient: AxiosInstance = axios.create({
-  baseURL: config.apiBaseUrl,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor for adding JWT token
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor
-apiClient.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error) => {
-    const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred';
-    toast.error(errorMessage);
-    return Promise.reject(error);
-  }
-);
 
 export const api = {
   // Legacy API endpoints

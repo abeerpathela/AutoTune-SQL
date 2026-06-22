@@ -11,6 +11,12 @@ const { classifyPostgresError } = require('../utils/postgresErrorClassifier');
 
 const MAX_LAB_ROWS = 100;
 
+/** ML taxonomy: only Syntax and Logic are distinct; everything else is Performance. */
+function resolveErrorCategory(category) {
+  if (category === 'Syntax' || category === 'Logic') return category;
+  return 'Performance';
+}
+
 async function fetchQueryRows(originalQuery) {
   const trimmed = originalQuery.trim();
   const upper = trimmed.toUpperCase();
@@ -64,6 +70,7 @@ function countNodes(plan, targetTypes) {
 }
 
 function buildErrorAnalysis(originalQuery, classified) {
+  const errorCategory = resolveErrorCategory(classified.errorCategory);
   return {
     originalQuery,
     explainPlan: null,
@@ -77,13 +84,13 @@ function buildErrorAnalysis(originalQuery, classified) {
     roundTripTime: 0,
     joinTypeCount: 0,
     isSyntaxValid: classified.isSyntaxValid,
-    errorCategory: classified.errorCategory,
+    errorCategory,
     errorCode: classified.code,
     message: classified.message,
     errorHint: classified.hint,
     postgresError: classified.message,
     structuredError: {
-      errorCategory: classified.errorCategory,
+      errorCategory,
       message: classified.message,
       code: classified.code,
       hint: classified.hint,

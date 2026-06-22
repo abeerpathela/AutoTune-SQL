@@ -6,13 +6,16 @@ import { api } from '../lib/api';
 import { CircularProgress } from '../components/ui/CircularProgress';
 import { MagneticButton } from '../components/ui/InteractionLayer';
 import { BrandStrip } from '../components/brand/BrandStrip';
+import { UserGreeting } from '../components/UserGreeting';
 import { useProgress } from '../contexts/ProgressContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [datasetStats, setDatasetStats] = useState<any>(null);
   const { stats: academyProgress } = useProgress();
   const [certificates, setCertificates] = useState<any[]>([]);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,7 +93,7 @@ export const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-4xl font-bold text-zinc-100 mb-2"
         >
-          Welcome back
+          <UserGreeting user={user} />
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}

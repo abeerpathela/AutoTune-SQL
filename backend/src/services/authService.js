@@ -1,10 +1,11 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
+const { JWT_SECRET } = require('../config/env');
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 const JWT_EXPIRES_IN = '7d';
+const NEW_USER_WINDOW_MS = 5 * 60 * 1000;
 
 const hashPassword = async (password) => {
   const saltRounds = 10;
@@ -22,6 +23,25 @@ const generateToken = (userId, role = 'USER') => {
 const verifyToken = (token) => {
   return jwt.verify(token, JWT_SECRET);
 };
+
+const isRecentlyCreated = (createdAt) => {
+  if (!createdAt) return false;
+  return Date.now() - new Date(createdAt).getTime() < NEW_USER_WINDOW_MS;
+};
+
+const formatUserResponse = (user, { firstTimeLogin = false } = {}) => ({
+  id: user.id,
+  email: user.email,
+  role: user.role,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  avatar: user.avatar,
+  isVerified: user.isVerified,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
+  firstTimeLogin,
+  isNewUser: firstTimeLogin || isRecentlyCreated(user.createdAt),
+});
 
 const signup = async (email, password, firstName, lastName) => {
   const existingUser = await prisma.user.findUnique({
@@ -45,7 +65,7 @@ const signup = async (email, password, firstName, lastName) => {
 
   const token = generateToken(user.id, user.role);
 
-  return { token, user: { id: user.id, email: user.email, role: user.role } };
+  return { token, user: formatUserResponse(user, { firstTimeLogin: true }) };
 };
 
 const login = async (email, password) => {
@@ -75,7 +95,7 @@ const login = async (email, password) => {
     const token = generateToken(user.id, 'ADMIN');
     return {
       token,
-      user: { id: user.id, email: user.email, role: 'ADMIN', firstName: user.firstName, lastName: user.lastName, avatar: user.avatar },
+      user: formatUserResponse(user),
     };
   }
 
@@ -99,7 +119,7 @@ const login = async (email, password) => {
 
   const token = generateToken(user.id, user.role);
 
-  return { token, user: { id: user.id, email: user.email, role: user.role } };
+  return { token, user: formatUserResponse(user) };
 };
 
 const getCurrentUser = async (userId) => {
@@ -113,6 +133,8 @@ const getCurrentUser = async (userId) => {
       lastName: true,
       avatar: true,
       isVerified: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
 
@@ -120,7 +142,7 @@ const getCurrentUser = async (userId) => {
     throw new Error('User not found');
   }
 
-  return user;
+  return formatUserResponse(user);
 };
 
 module.exports = {

@@ -1,19 +1,16 @@
 const passport = require('passport');
 const GitHubStrategy = require('passport-github2').Strategy;
 const { PrismaClient } = require('@prisma/client');
+const { GITHUB_CALLBACK_URL } = require('./env');
 
 const prisma = new PrismaClient();
-
-const callbackURL =
-  process.env.GITHUB_CALLBACK_URL ||
-  `${(process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`).replace(/\/$/, '')}/api/v1/auth/github/callback`;
 
 passport.use(
   new GitHubStrategy(
     {
       clientID: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
-      callbackURL,
+      callbackURL: GITHUB_CALLBACK_URL,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

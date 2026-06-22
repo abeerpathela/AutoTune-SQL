@@ -19,6 +19,7 @@ import { MagneticButton } from '../ui/InteractionLayer';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useAuth } from '../../contexts/AuthContext';
 import { BRAND } from '../../lib/brand';
+import { UserGreeting } from '../UserGreeting';
 
 type NavItem = { to: string; label: string; icon?: LucideIcon };
 
@@ -108,6 +109,12 @@ export const Navbar = () => {
           )}
 
           {!isLanding && <div className="hidden h-6 w-px bg-[var(--border)] lg:block" />}
+
+          {user && !isLanding && (
+            <p className="hidden max-w-[220px] truncate text-xs text-muted xl:block">
+              <UserGreeting user={user} variant="inline" />
+            </p>
+          )}
 
           {!isLanding && (
             <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">

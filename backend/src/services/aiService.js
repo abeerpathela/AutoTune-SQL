@@ -1,22 +1,19 @@
 const Groq = require('groq-sdk');
+const { GROQ_API_KEY } = require('../config/env');
+const logger = require('../config/logger');
 
 const MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
+  apiKey: GROQ_API_KEY,
 });
 
-// Validate Groq configuration on startup
 const validateGroqConfig = () => {
-  const hasApiKey = !!process.env.GROQ_API_KEY;
-  const hasModel = !!process.env.GROQ_MODEL; // Optional, but recommended
-
-  if (hasApiKey) {
-    console.log('✅ Groq configuration loaded');
-    console.log(`   - Model: ${MODEL}`);
+  if (GROQ_API_KEY) {
+    logger.info('Groq configuration loaded');
+    logger.info(`Model: ${MODEL}`);
   } else {
-    console.log('❌ Invalid Groq configuration');
-    console.log('   - GROQ_API_KEY environment variable is missing');
+    logger.warn('GROQ_API_KEY environment variable is missing');
   }
 };
 
@@ -59,7 +56,7 @@ Do not include any markdown or extra text - return only valid JSON.`;
     return response;
   } catch (error) {
     // Log exact Groq error for debugging
-    console.error('❌ Groq API Error:', JSON.stringify(error, null, 2));
+    logger.error('Groq API Error:', JSON.stringify(error, null, 2));
 
     // Handle model decommissioned error
     if (error.code === 'model_decommissioned') {

@@ -10,6 +10,8 @@ export interface User {
   lastName?: string;
   createdAt: string;
   updatedAt: string;
+  firstTimeLogin?: boolean;
+  isNewUser?: boolean;
 }
 
 export interface Course {

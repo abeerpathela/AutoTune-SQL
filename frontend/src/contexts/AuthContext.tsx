@@ -7,10 +7,10 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: {
-    (email: string, password: string): Promise<void>;
-    (token: string): Promise<void>;
+    (email: string, password: string): Promise<User>;
+    (token: string): Promise<User>;
   };
-  signup: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
+  signup: (email: string, password: string, firstName?: string, lastName?: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -34,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(jwt);
     const currentUser = await api.getMe();
     setUser(currentUser);
+    return currentUser;
   }, []);
 
   useEffect(() => {
@@ -56,19 +57,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(TOKEN_KEY, result.token);
     setToken(result.token);
     setUser(result.user);
+    return result.user;
   };
 
   const loginWithToken = async (jwt: string) => {
-    await restoreSession(jwt);
+    const currentUser = await restoreSession(jwt);
     setIsLoading(false);
+    return currentUser;
   };
 
   const login = (async (emailOrToken: string, password?: string) => {
     if (password === undefined) {
-      await loginWithToken(emailOrToken);
-    } else {
-      await loginWithCredentials(emailOrToken, password);
+      return loginWithToken(emailOrToken);
     }
+    return loginWithCredentials(emailOrToken, password);
   }) as AuthContextType['login'];
 
   const signup = async (email: string, password: string, firstName?: string, lastName?: string) => {
@@ -76,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(TOKEN_KEY, result.token);
     setToken(result.token);
     setUser(result.user);
+    return result.user;
   };
 
   const logout = () => {

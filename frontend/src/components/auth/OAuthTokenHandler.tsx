@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../contexts/AuthContext';
+import { consumeOAuthCallback } from '../../lib/redirect';
 
 /** Captures ?token= from GitHub OAuth redirect and establishes the session. */
 export const OAuthTokenHandler = () => {
@@ -23,7 +24,7 @@ export const OAuthTokenHandler = () => {
 
         searchParams.delete('token');
         setSearchParams(searchParams, { replace: true });
-        navigate('/dashboard', { replace: true });
+        navigate(consumeOAuthCallback(), { replace: true });
       } catch (err) {
         console.error(err);
         localStorage.removeItem('token');

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Github, Mail, Lock, LogIn, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,20 +7,31 @@ import { MagneticButton } from '../components/ui/InteractionLayer';
 import { AuthLayout } from '../components/layout/AuthLayout';
 import { config } from '../lib/config';
 import { BRAND } from '../lib/brand';
+import { getAuthCallback, storeOAuthCallback } from '../lib/redirect';
+import { isNewUser } from '../components/UserGreeting';
 
 export const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useAuth();
+  const callbackTo = getAuthCallback(searchParams);
+  const signupPath = searchParams.get('callback') || searchParams.get('redirect')
+    ? `/signup?callback=${encodeURIComponent(searchParams.get('callback') || searchParams.get('redirect')!)}`
+    : '/signup';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(formData.email, formData.password);
-      toast.success(`Welcome back to ${BRAND.name}!`);
-      navigate('/dashboard');
+      const loggedInUser = await login(formData.email, formData.password);
+      toast.success(
+        loggedInUser && isNewUser(loggedInUser)
+          ? `Welcome to ${BRAND.name}!`
+          : `Welcome back to ${BRAND.name}!`
+      );
+      navigate(callbackTo, { replace: true });
     } catch (err) {
       console.error(err);
     } finally {
@@ -101,6 +112,7 @@ export const Login = () => {
         variant="secondary"
         className="!w-full !py-3.5"
         onClick={() => {
+          storeOAuthCallback(callbackTo);
           window.location.href = config.githubOAuthUrl;
         }}
       >
@@ -110,7 +122,7 @@ export const Login = () => {
 
       <p className="mt-8 text-center text-sm text-muted">
         New to {BRAND.name}?{' '}
-        <Link to="/signup" className="link-accent">
+        <Link to={signupPath} className="link-accent">
           Create free account
         </Link>
       </p>

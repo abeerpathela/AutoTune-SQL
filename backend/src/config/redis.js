@@ -1,21 +1,23 @@
 const Redis = require('ioredis');
+const { REDIS_URL } = require('./env');
+const logger = require('./logger');
 
 let redisClient = null;
 
-const getRedisClient = () => {
+function getRedisClient() {
   if (!redisClient) {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-    redisClient = new Redis(redisUrl);
+    redisClient = new Redis(REDIS_URL);
 
     redisClient.on('connect', () => {
-      console.log('✅ Redis connected successfully');
+      logger.info('Redis connected');
     });
 
     redisClient.on('error', (err) => {
-      console.error('❌ Redis connection error:', err);
+      logger.error('Redis error:', err.message);
     });
   }
+
   return redisClient;
-};
+}
 
 module.exports = getRedisClient;

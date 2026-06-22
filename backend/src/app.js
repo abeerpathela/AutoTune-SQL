@@ -2,8 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 const session = require('express-session');
-require('dotenv').config();
+const { FRONTEND_URL, JWT_SECRET } = require('./config/env');
+const logger = require('./config/logger');
 
 const queryRoutes = require('./routes/queryRoutes');
 const optimizationRoutes = require('./routes/optimizationRoutes');
@@ -21,21 +23,48 @@ require('./services/aiService');
 
 const app = express();
 
-// Initialize services
 getRedisClient();
 initializeMLService();
 
-// Middleware
 app.use(helmet());
-app.use(cors());
-app.use(morgan('dev'));
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+  })
+);
+
+if (logger.shouldLogHttp()) {
+  app.use(
+    morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev', {
+      stream: {
+        write: (message) => logger.http(message.trim()),
+      },
+    })
+  );
+}
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX || '200', 10),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', message: 'Too many requests, please try again later.' },
+});
+
+app.use('/api', apiLimiter);
 app.use(express.json());
-app.use(session({ secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key', resave: false, saveUninitialized: false }));
+app.use(
+  session({
+    secret: JWT_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 const passport = require('./config/passport');
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Health Check Route
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'success',
@@ -44,7 +73,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API Routes — public auth + health only; everything else requires JWT
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/academy', protect, academyRoutes);
 app.use('/api/v1/certificates', certRoutes);
@@ -55,9 +83,8 @@ app.use('/api/optimize', protect, optimizationRoutes);
 app.use('/api/ml', protect, mlRoutes);
 app.use('/api/connections', protect, connectionRoutes);
 
-// Centralized Error Handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error(err.stack || err.message);
   res.status(err.status || 500).json({
     status: 'error',
     message: err.message || 'Internal Server Error',
