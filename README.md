@@ -4,9 +4,13 @@ AutoTune-SQL is an AI and Machine Learning powered SQL optimization platform tha
 
 The platform combines Large Language Models, Machine Learning-based risk assessment, query performance analysis, and an integrated SQL learning academy to create a complete environment for both query optimization and developer education.
 
+🌐 **Click the image below to visit the live AutoTune-SQL website and experience the platform firsthand.**
 
+<p align="center">
+  <a href="https://autotune-sql.in" target="_blank">
 <img width="1918" height="907" alt="image" src="https://github.com/user-attachments/assets/c2a5965c-bf0a-4fd3-b669-dc4521538731" />
-
+  </a>
+</p>
 
 AutoTune-SQL is designed to answer three critical questions:
 
