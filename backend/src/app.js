@@ -27,9 +27,20 @@ getRedisClient();
 initializeMLService();
 
 app.use(helmet());
+
+const allowedOrigins = FRONTEND_URL.split(',')
+  .map((url) => url.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, origin || true);
+        return;
+      }
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   })
 );
