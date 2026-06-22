@@ -7,7 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ProgressProvider } from './contexts/ProgressContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { OAuthTokenHandler } from './components/auth/OAuthTokenHandler';
+import { AuthSuccess } from './pages/auth/AuthSuccess';
 import { Landing } from './pages/Landing';
 import { Dashboard } from './pages/Dashboard';
 import { Optimizer } from './pages/Optimizer';
@@ -42,7 +42,7 @@ function App() {
                     <Route path="/" element={<Landing />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
-                    <Route path="/auth-success" element={<OAuthTokenHandler />} />
+                    <Route path="/auth-success" element={<AuthSuccess />} />
 
                     <Route
                       path="/dashboard"
