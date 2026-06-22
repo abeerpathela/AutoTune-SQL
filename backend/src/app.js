@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const session = require('express-session');
-const { FRONTEND_URL, JWT_SECRET } = require('./config/env');
+const { FRONTEND_ORIGINS, JWT_SECRET } = require('./config/env');
 const logger = require('./config/logger');
 
 const queryRoutes = require('./routes/queryRoutes');
@@ -28,9 +28,7 @@ initializeMLService();
 
 app.use(helmet());
 
-const allowedOrigins = FRONTEND_URL.split(',')
-  .map((url) => url.trim().replace(/\/$/, ''))
-  .filter(Boolean);
+const allowedOrigins = FRONTEND_ORIGINS;
 
 app.use(
   cors({

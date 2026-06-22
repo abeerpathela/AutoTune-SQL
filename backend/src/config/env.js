@@ -2,7 +2,11 @@ require('dotenv').config();
 
 const PORT = parseInt(process.env.PORT || '5000', 10);
 const API_BASE_URL = (process.env.API_BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
-const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+const FRONTEND_ORIGINS = (process.env.FRONTEND_URL || 'http://localhost:3000')
+  .split(',')
+  .map((url) => url.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+const FRONTEND_URL = FRONTEND_ORIGINS[0] || 'http://localhost:3000';
 const DATABASE_URL = process.env.DATABASE_URL;
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
@@ -14,6 +18,7 @@ module.exports = {
   PORT,
   API_BASE_URL,
   FRONTEND_URL,
+  FRONTEND_ORIGINS,
   DATABASE_URL,
   REDIS_URL,
   JWT_SECRET,
