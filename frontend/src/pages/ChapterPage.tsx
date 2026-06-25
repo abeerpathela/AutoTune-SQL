@@ -8,7 +8,6 @@ import {
   CheckCircle,
   ChevronRightCircle,
   ChevronDown,
-  List,
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -52,6 +51,15 @@ export const ChapterPage = () => {
   useEffect(() => {
     setMobileSidebarOpen(false);
   }, [chapterOrder]);
+
+  useEffect(() => {
+    if (!mobileSidebarOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileSidebarOpen]);
 
   const loadCatalog = useCallback(async () => {
     const catalogRes = await api.getAcademyCatalog();
@@ -277,24 +285,24 @@ export const ChapterPage = () => {
     (watchStats?.canMarkComplete ?? savedWatchPercent >= 80);
 
   return (
-    <div className="space-y-6">
+    <div className="-mx-4 space-y-5 px-0 sm:mx-0 sm:space-y-6">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-end justify-between gap-4"
+        className="flex flex-col justify-between gap-4 px-4 sm:flex-row sm:items-end sm:px-0"
       >
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-3 sm:gap-4">
           <Logo size="sm" showText={false} className="hidden shrink-0 sm:block" />
           <div>
-            <p className="text-sm text-violet-400 font-medium">{chapter.moduleTitle}</p>
-            <h1 className="mt-1 text-2xl font-bold text-zinc-100 sm:text-3xl">AutoTune Academy</h1>
-            <p className="text-zinc-400 mt-1">
+            <p className="text-sm font-semibold text-violet-400">{chapter.moduleTitle}</p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-100 sm:text-4xl">AutoTune Academy</h1>
+            <p className="mt-2 text-base leading-relaxed text-zinc-400">
               Chapter {chapter.globalOrder} of {TOTAL_CHAPTERS} · {completedCount} completed
             </p>
           </div>
         </div>
         <div className="w-full sm:w-72">
-          <div className="h-2.5 bg-zinc-800 rounded-full overflow-hidden border border-zinc-700/50">
+          <div className="h-3 overflow-hidden rounded-full border border-zinc-700/50 bg-zinc-800">
             <motion.div
               className="h-full bg-gradient-to-r from-violet-600 to-emerald-500"
               initial={{ width: 0 }}
@@ -302,24 +310,30 @@ export const ChapterPage = () => {
               transition={{ duration: 0.5 }}
             />
           </div>
-          <p className="text-xs text-zinc-500 mt-1 text-right">{totalProgress}% course progress</p>
+          <p className="mt-2 text-right text-sm text-zinc-500">{totalProgress}% course progress</p>
         </div>
       </motion.div>
 
-      <button
+      <motion.button
         type="button"
         onClick={() => setMobileSidebarOpen(true)}
-        className="interactive-target flex w-full items-center justify-between gap-3 rounded-xl border border-theme bg-[var(--bg-glass)] px-4 py-3 text-left lg:hidden"
+        whileTap={{ scale: 0.98 }}
+        className="interactive-target mx-4 flex w-[calc(100%-2rem)] items-center justify-between gap-3 rounded-full border border-theme bg-zinc-900/40 px-5 py-3.5 text-left backdrop-blur-sm lg:hidden"
         aria-label="Open chapter list"
       >
-        <span className="flex min-w-0 items-center gap-2">
-          <List className="h-4 w-4 shrink-0 text-violet-400" />
-          <span className="truncate text-sm font-medium text-primary">
-            Ch. {chapter.globalOrder}: {chapter.title}
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-sm font-bold text-violet-300">
+            {chapter.globalOrder}
+          </span>
+          <span className="min-w-0">
+            <span className="block text-xs font-semibold uppercase tracking-wider text-violet-400">
+              Chapter selector
+            </span>
+            <span className="block truncate text-base font-semibold text-primary">{chapter.title}</span>
           </span>
         </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-muted" />
-      </button>
+        <ChevronDown className="h-5 w-5 shrink-0 text-muted" />
+      </motion.button>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         <div className="hidden lg:block">
@@ -338,32 +352,46 @@ export const ChapterPage = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+                className="fixed inset-0 z-[60] bg-black/55 backdrop-blur-xl lg:hidden"
                 aria-label="Close chapter list"
                 onClick={() => setMobileSidebarOpen(false)}
               />
               <motion.div
-                initial={{ x: '-100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '-100%' }}
-                transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-                className="fixed inset-y-0 left-0 z-50 w-[min(100%,20rem)] p-4 lg:hidden"
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', stiffness: 340, damping: 36 }}
+                className="fixed inset-x-0 bottom-0 z-[70] max-h-[88vh] overflow-hidden rounded-t-[1.75rem] border-t border-theme bg-[var(--bg-elevated)] shadow-[0_-24px_80px_rgba(0,0,0,0.45)] lg:hidden"
               >
-                <div className="relative h-full">
-                  <button
+                <div className="flex justify-center pt-3 pb-1">
+                  <div className="h-1 w-12 rounded-full bg-[var(--border-strong)]" />
+                </div>
+                <div className="flex items-center justify-between border-b border-theme px-5 pb-4 pt-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-subtle">
+                      All chapters
+                    </p>
+                    <p className="mt-1 text-base font-semibold text-primary">
+                      {completedCount} of {TOTAL_CHAPTERS} complete
+                    </p>
+                  </div>
+                  <motion.button
                     type="button"
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="absolute right-2 top-2 z-10 rounded-lg p-2 text-muted hover:text-primary"
+                    whileTap={{ scale: 0.95 }}
+                    className="rounded-full p-2 text-muted hover:text-primary"
                     aria-label="Close chapter list"
                   >
-                    <X className="h-4 w-4" />
-                  </button>
+                    <X className="h-5 w-5" />
+                  </motion.button>
+                </div>
+                <div className="max-h-[calc(88vh-8.5rem)] overflow-y-auto px-4 pb-8 pt-2">
                   <AcademySidebar
                     catalog={catalog}
                     activeGlobalOrder={chapter.globalOrder ?? chapterOrder}
                     quizActive={quizActive}
                     onNavigate={() => setMobileSidebarOpen(false)}
-                    className="h-full max-h-none"
+                    sheetMode
                   />
                 </div>
               </motion.div>
@@ -371,26 +399,28 @@ export const ChapterPage = () => {
           )}
         </AnimatePresence>
 
-        <main className="min-w-0 space-y-6 lg:col-span-3">
+        <main className="min-w-0 space-y-5 px-4 sm:space-y-6 sm:px-0 lg:col-span-3">
           {contentLoading ? (
             <ChapterContentSkeleton isVideo={isVideo} />
           ) : (
             <>
-              <h2 className="text-2xl font-bold text-zinc-100">{chapter.title}</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-zinc-100 sm:text-3xl">{chapter.title}</h2>
 
               {isVideo && (
-                <div className="space-y-4">
-                  <VideoPlayer
-                    key={chapter.id}
-                    videoId={videoId}
-                    initialWatchPercent={savedWatchPercent}
-                    onWatchUpdate={handleWatchUpdate}
-                  />
+                <div className="space-y-5">
+                  <div className="mobile-edge-card -mx-4 sm:mx-0 sm:rounded-2xl">
+                    <VideoPlayer
+                      key={chapter.id}
+                      videoId={videoId}
+                      initialWatchPercent={savedWatchPercent}
+                      onWatchUpdate={handleWatchUpdate}
+                    />
+                  </div>
 
                   {theoryContent && (
                     <motion.section
                       layoutId="chapter-theory"
-                      className="glass prose prose-sm max-w-none rounded-2xl p-4 dark:prose-invert sm:p-6"
+                      className="mobile-edge-card prose prose-base max-w-none rounded-none border-y border-theme bg-zinc-900/30 p-5 leading-relaxed dark:prose-invert sm:rounded-2xl sm:border sm:p-6"
                     >
                       <ReactMarkdown>{theoryContent}</ReactMarkdown>
                     </motion.section>
@@ -408,21 +438,8 @@ export const ChapterPage = () => {
                       <motion.button
                         onClick={handleMarkVideoComplete}
                         disabled={completingVideo || !canMarkVideoComplete}
-                        animate={
-                          canMarkVideoComplete
-                            ? {
-                                boxShadow: [
-                                  '0 0 0px rgba(228,228,231,0)',
-                                  '0 0 20px rgba(228,228,231,0.35)',
-                                  '0 0 0px rgba(228,228,231,0)',
-                                ],
-                              }
-                            : undefined
-                        }
-                        transition={canMarkVideoComplete ? { repeat: Infinity, duration: 2 } : undefined}
-                        whileHover={canMarkVideoComplete ? { scale: 1.01 } : undefined}
-                        whileTap={canMarkVideoComplete ? { scale: 0.99 } : undefined}
-                        className={`w-full py-4 rounded-lg text-lg font-bold flex items-center justify-center gap-2 transition-colors ${
+                        whileTap={{ scale: canMarkVideoComplete ? 0.95 : 1 }}
+                        className={`flex w-full items-center justify-center gap-2 rounded-xl py-4 text-lg font-bold transition-colors ${
                           canMarkVideoComplete
                             ? 'bg-gradient-to-r from-zinc-200 to-zinc-500 text-black shadow-[0_0_15px_rgba(255,255,255,0.2)]'
                             : 'border border-zinc-700 bg-zinc-800/60 text-zinc-500 cursor-not-allowed'
@@ -465,13 +482,13 @@ export const ChapterPage = () => {
                 <>
                   <motion.section
                     layoutId="chapter-theory"
-                    className="glass rounded-2xl p-4 sm:p-6 lg:p-8"
+                    className="mobile-edge-card rounded-none border-y border-theme bg-zinc-900/30 p-5 sm:rounded-2xl sm:border sm:p-6 lg:p-8"
                   >
                     <div className="mb-4 flex items-center gap-2">
                       <BookOpen className="h-5 w-5 text-primary" />
-                      <h3 className="text-lg font-semibold text-primary">Detailed Theory</h3>
+                      <h3 className="text-xl font-semibold text-primary">Detailed Theory</h3>
                     </div>
-                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <div className="prose prose-base max-w-none leading-relaxed dark:prose-invert">
                       <ReactMarkdown>{theoryContent}</ReactMarkdown>
                     </div>
                   </motion.section>
@@ -511,7 +528,7 @@ export const ChapterPage = () => {
                   {chapterOrder < TOTAL_CHAPTERS && chapter && isChapterComplete(chapter.id) ? (
                     <button
                       onClick={() => navigate(`/learn/chapter/${chapterOrder + 1}`)}
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-violet-500 text-white font-semibold hover:bg-violet-600"
+                      className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-6 py-3.5 text-base font-semibold text-white hover:bg-violet-600 active:scale-95"
                     >
                       Next Chapter
                       <ChevronRightCircle className="w-5 h-5" />

@@ -16,6 +16,7 @@ type AcademySidebarProps = {
   quizActive?: boolean;
   onNavigate?: () => void;
   className?: string;
+  sheetMode?: boolean;
 };
 
 function isUnlockedByProgress(
@@ -37,6 +38,7 @@ export const AcademySidebar = memo(function AcademySidebar({
   quizActive = false,
   onNavigate,
   className = '',
+  sheetMode = false,
 }: AcademySidebarProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -114,14 +116,16 @@ export const AcademySidebar = memo(function AcademySidebar({
       )}
 
       <aside
-        className={`glass flex max-h-[80vh] flex-col rounded-2xl p-3 lg:col-span-1 ${
-          quizActive ? 'pointer-events-none select-none opacity-40' : ''
+        className={`flex flex-col rounded-2xl p-3 ${
+          sheetMode
+            ? 'h-full max-h-none bg-transparent p-0'
+            : `glass max-h-[80vh] lg:col-span-1 ${quizActive ? 'pointer-events-none select-none opacity-40' : ''}`
         } ${className}`}
       >
-        <div className="flex-1 space-y-4 overflow-y-auto pr-1">
+        <div className={`flex-1 space-y-4 overflow-y-auto ${sheetMode ? 'pr-0' : 'pr-1'}`}>
           {moduleTitles.map((moduleTitle) => (
             <div key={moduleTitle}>
-              <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-subtle">
+              <h3 className={`mb-2 px-2 font-semibold uppercase tracking-[0.18em] text-subtle ${sheetMode ? 'text-xs' : 'text-[10px]'}`}>
                 {moduleTitle}
               </h3>
               <motion.div
@@ -150,11 +154,13 @@ export const AcademySidebar = memo(function AcademySidebar({
                           }
                         }}
                         disabled={!unlocked || quizActive}
-                        className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs transition-all ${
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 text-left transition-all ${
+                          sheetMode ? 'py-3.5 text-sm' : 'gap-2.5 rounded-lg py-2 text-xs'
+                        } ${
                           isActive
-                            ? 'border border-theme bg-[var(--text-primary)] font-medium text-[var(--bg-base)]'
+                            ? 'border border-theme bg-[var(--text-primary)] font-semibold text-[var(--bg-base)]'
                             : unlocked
-                              ? 'text-muted hover:bg-[var(--accent-glow)] hover:text-primary'
+                              ? 'font-medium text-muted hover:bg-[var(--accent-glow)] hover:text-primary active:bg-[var(--accent-glow)]'
                               : 'cursor-not-allowed text-subtle opacity-45'
                         }`}
                       >
@@ -167,7 +173,7 @@ export const AcademySidebar = memo(function AcademySidebar({
                               exit={{ scale: 0, rotate: 180 }}
                               transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                             >
-                              <Check className="h-4 w-4 shrink-0 text-emerald-500" />
+                              <Check className={`shrink-0 text-emerald-500 ${sheetMode ? 'h-5 w-5' : 'h-4 w-4'}`} />
                             </motion.span>
                           ) : unlocked ? (
                             <motion.span key={`icon-${ch.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

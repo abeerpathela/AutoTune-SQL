@@ -459,3 +459,26 @@ html.light .dark\:prose-invert {
 html.light .dark\:prose-invert :where(h1, h2, h3, h4, strong) {
   color: var(--text-primary);
 }
+
+/* ─── Mobile-native layout utilities ─────────────────────────────── */
+@media (max-width: 639px) {
+  body {
+    font-size: 16px;
+  }
+}
+
+.mobile-edge-card {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  background: rgba(24, 24, 27, 0.3);
+}
+
+html.light .mobile-edge-card {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.hero-graphic-mask {
+  -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
+}

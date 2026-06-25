@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { Zap, Copy, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Database, Lightbulb } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Zap, Copy, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Database, Lightbulb, Sparkles } from 'lucide-react';
 import { api } from '../lib/api';
 import { BrandStrip } from '../components/brand/BrandStrip';
 import type { AnalysisResult, OptimizationResult, DbConnection, QueryAnalysisError } from '../types';
@@ -112,6 +113,30 @@ JOIN orders o ON u.id = o.user_id;`);
   const [performanceWarnings, setPerformanceWarnings] = useState<string[]>([]);
   const [connections, setConnections] = useState<DbConnection[]>([]);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 639px)');
+    const update = () => setIsMobile(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener('change', update);
+    return () => mediaQuery.removeEventListener('change', update);
+  }, []);
+
+  const editorOptions = {
+    minimap: { enabled: false },
+    fontSize: isMobile ? 15 : 14,
+    wordWrap: 'on' as const,
+    lineNumbers: isMobile ? ('off' as const) : ('on' as const),
+    scrollBeyondLastLine: false,
+    padding: { top: isMobile ? 16 : 12 },
+  };
+
+  const scrollToResults = () => {
+    setActiveTab('optimized');
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   useEffect(() => {
     const fetchConnections = async () => {
@@ -326,7 +351,7 @@ JOIN orders o ON u.id = o.user_id;`);
               defaultLanguage="sql"
               theme="vs-dark"
               value={optimizedQuery}
-              options={{ minimap: { enabled: false }, fontSize: 14, wordWrap: 'on', readOnly: true }}
+              options={{ ...editorOptions, readOnly: true }}
               key={optimizedQuery}
             />
           </div>
@@ -373,22 +398,22 @@ JOIN orders o ON u.id = o.user_id;`);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28 sm:pb-0">
       <BrandStrip title="SQL Optimizer" subtitle="Analyze, score risk, and rewrite queries with AI" />
       <div>
-        <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl">SQL Optimizer</h1>
-        <p className="text-gray-400">Analyze, score risk, and optimize your SQL queries with AI</p>
+        <h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">SQL Optimizer</h1>
+        <p className="text-base leading-relaxed text-gray-400">Analyze, score risk, and optimize your SQL queries with AI</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="min-w-0 space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2">
+        <div className="mobile-edge-card -mx-4 min-w-0 space-y-4 rounded-none border-y border-gray-800/80 bg-zinc-900/30 px-4 py-5 sm:mx-0 sm:rounded-xl sm:border sm:px-5 lg:border-gray-800">
+          <div className="hidden flex-col gap-4 sm:flex sm:flex-row sm:items-end sm:justify-between lg:flex">
             <div className="w-full flex-1">
-              <label className="mb-1 block text-sm font-medium text-gray-400">Database</label>
+              <label className="mb-2 block text-sm font-semibold text-gray-300">Database</label>
               <select
                 value={selectedConnectionId || ''}
                 onChange={(e) => setSelectedConnectionId(e.target.value || null)}
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-xl border border-gray-700 bg-gray-800 px-4 py-3 text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Demo Database</option>
                 {connections.map((conn) => (
@@ -398,64 +423,118 @@ JOIN orders o ON u.id = o.user_id;`);
                 ))}
               </select>
             </div>
-            <div className="w-full shrink-0 sm:w-auto">
-              <button
+            <div className="hidden w-full shrink-0 sm:block sm:w-auto lg:block">
+              <motion.button
                 onClick={handleAnalyze}
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto"
+                whileTap={{ scale: 0.95 }}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                     Processing...
                   </>
                 ) : (
                   <>
-                    <Zap className="w-5 h-5" />
+                    <Zap className="h-5 w-5" />
                     Analyze
                   </>
                 )}
-              </button>
+              </motion.button>
             </div>
           </div>
-          <h3 className="text-lg font-semibold text-white">Original SQL</h3>
-          <div className="h-[300px] overflow-hidden rounded-xl border border-gray-800 sm:h-[400px] lg:h-[500px]">
+
+          <div className="sm:hidden">
+            <label className="mb-2 block text-sm font-semibold text-gray-300">Database</label>
+            <select
+              value={selectedConnectionId || ''}
+              onChange={(e) => setSelectedConnectionId(e.target.value || null)}
+              className="w-full rounded-xl border border-gray-700 bg-gray-800 px-4 py-3 text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Demo Database</option>
+              {connections.map((conn) => (
+                <option key={conn.id} value={conn.id}>
+                  {conn.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <h3 className="text-lg font-semibold text-white sm:text-xl">Original SQL</h3>
+          <div className="h-[40vh] overflow-hidden rounded-xl border border-gray-800 sm:h-[400px] lg:h-[500px]">
             <Editor
               height="100%"
               defaultLanguage="sql"
               theme="vs-dark"
               value={sqlInput}
               onChange={(value) => setSqlInput(value || '')}
-              options={{ minimap: { enabled: false }, fontSize: 14, wordWrap: 'on' }}
+              options={editorOptions}
             />
           </div>
         </div>
 
-        <div className="min-w-0 space-y-4">
+        <div
+          ref={resultsRef}
+          className="mobile-edge-card -mx-4 min-w-0 space-y-4 rounded-none border-y border-gray-800/80 bg-zinc-900/30 px-4 py-5 sm:mx-0 sm:rounded-xl sm:border sm:px-5 lg:border-gray-800"
+        >
           <div className="-mx-1 flex gap-2 overflow-x-auto border-b border-gray-800 pb-2 sm:mx-0">
             {[
-              { id: 'optimized', label: 'AI Optimization', icon: CheckCircle2 },
-              { id: 'explanation', label: 'AI Explanation', icon: AlertCircle },
-              { id: 'prediction', label: 'ML Risk Score', icon: Zap },
+              { id: 'optimized', label: 'Optimization', icon: CheckCircle2 },
+              { id: 'explanation', label: 'Explanation', icon: AlertCircle },
+              { id: 'prediction', label: 'ML Risk', icon: Zap },
             ].map((tab) => (
-              <button
+              <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex shrink-0 items-center gap-2 rounded-t-lg px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:text-sm ${
+                whileTap={{ scale: 0.95 }}
+                className={`flex shrink-0 items-center gap-2 rounded-t-xl px-4 py-2.5 text-sm font-semibold transition-all ${
                   activeTab === tab.id
                     ? 'border border-b-0 border-gray-800 bg-gray-800 text-blue-400'
                     : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
+                <tab.icon className="h-4 w-4" />
                 {tab.label}
-                {tabLoading[tab.id] && <Loader2 className="w-3 h-3 animate-spin" />}
-              </button>
+                {tabLoading[tab.id] && <Loader2 className="h-3 w-3 animate-spin" />}
+              </motion.button>
             ))}
           </div>
-          <div className="h-[300px] overflow-hidden rounded-xl border border-gray-800 bg-gray-900 sm:h-[400px] lg:h-[500px]">
+          <div className="h-[40vh] overflow-hidden rounded-xl border border-gray-800 bg-gray-900 sm:h-[400px] lg:h-[500px]">
             {renderTabContent()}
           </div>
+        </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-800/80 bg-zinc-950/95 px-4 py-3 backdrop-blur-xl sm:hidden">
+        <div className="mx-auto flex max-w-lg gap-3">
+          <motion.button
+            onClick={handleAnalyze}
+            disabled={loading}
+            whileTap={{ scale: 0.95 }}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-base font-bold text-white disabled:opacity-50"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Analyzing…
+              </>
+            ) : (
+              <>
+                <Zap className="h-5 w-5" />
+                Analyze
+              </>
+            )}
+          </motion.button>
+          <motion.button
+            onClick={scrollToResults}
+            disabled={!optimizerState.analysisData && !optimizerState.optimizationData}
+            whileTap={{ scale: 0.95 }}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-800 py-4 text-base font-bold text-white disabled:opacity-40"
+          >
+            <Sparkles className="h-5 w-5 text-violet-400" />
+            Optimize
+          </motion.button>
         </div>
       </div>
     </div>

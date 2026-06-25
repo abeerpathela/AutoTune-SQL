@@ -43,17 +43,17 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <SpotlightCard className="p-6">
+    <SpotlightCard className="mobile-edge-card p-5 sm:rounded-2xl sm:p-6">
       <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-theme bg-[var(--bg-elevated)]">
         <Icon className="h-6 w-6 text-primary" />
       </div>
-      <h3 className="mb-2 text-lg font-semibold text-primary">{title}</h3>
-      <p className="text-sm leading-relaxed text-muted">{description}</p>
+      <h3 className="mb-2 text-lg font-semibold text-primary sm:text-xl">{title}</h3>
+      <p className="text-base leading-relaxed text-muted">{description}</p>
     </SpotlightCard>
   );
 }
 
-function FloatingSqlBlock() {
+function HeroSqlGraphic({ interactive = true }: { interactive?: boolean }) {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const rotateX = useSpring(useTransform(mouseY, [-200, 200], [8, -8]), {
@@ -77,6 +77,7 @@ function FloatingSqlBlock() {
   }, [floatY]);
 
   useEffect(() => {
+    if (!interactive) return;
     const onMove = (e: MouseEvent) => {
       const cx = window.innerWidth / 2;
       const cy = window.innerHeight / 2;
@@ -85,26 +86,25 @@ function FloatingSqlBlock() {
     };
     window.addEventListener('mousemove', onMove);
     return () => window.removeEventListener('mousemove', onMove);
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, interactive]);
 
   return (
     <motion.div
-      style={{
-        rotateX,
-        rotateY,
-        y: floatY,
-        transformPerspective: 900,
-      }}
-      className="relative"
+      style={
+        interactive
+          ? { rotateX, rotateY, y: floatY, transformPerspective: 900 }
+          : { y: floatY, transformPerspective: 900 }
+      }
+      className="relative w-full"
     >
-      <div className="glass-strong rounded-2xl p-6 shadow-glow-cyan">
+      <div className="glass-strong rounded-none border-y border-theme p-5 shadow-glow-cyan sm:rounded-2xl sm:border sm:p-6">
         <div className="mb-4 flex items-center gap-2 border-b border-theme pb-3">
           <div className="h-3 w-3 rounded-full bg-red-500/80" />
           <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
           <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
-          <span className="ml-3 font-mono text-xs text-subtle">optimizer.sql</span>
+          <span className="ml-3 font-mono text-xs text-subtle sm:text-sm">optimizer.sql</span>
         </div>
-        <div className="space-y-1.5 font-mono text-sm">
+        <div className="space-y-1.5 font-mono text-sm sm:text-base">
           <div>
             <span className="text-subtle">1</span>{' '}
             <span className="text-cyan-400/90">EXPLAIN ANALYZE</span>{' '}
@@ -136,7 +136,7 @@ function FloatingSqlBlock() {
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 1.2 }}
-          className="mt-4 rounded-lg border border-[var(--success-border)] bg-success-subtle px-3 py-2 text-xs font-medium text-success"
+          className="mt-4 rounded-lg border border-[var(--success-border)] bg-success-subtle px-3 py-2 text-sm font-medium text-success"
         >
           ✓ Index scan · 12ms · 94% faster
         </motion.div>
@@ -158,94 +158,101 @@ export const Landing = () => {
   };
 
   return (
-    <div className="relative z-10 flex min-h-screen flex-col">
+    <div className="relative z-10 -mx-4 flex min-h-screen flex-col sm:mx-0">
       <div className="pointer-events-none absolute inset-0 grid-bg opacity-80" />
 
-      <section className="relative flex flex-1 items-center px-4 pb-24">
-        <div className="mx-auto w-full max-w-7xl">
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
-            <div className="space-y-6 text-center sm:space-y-8 lg:text-left">
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="flex flex-col items-center lg:items-start"
-              >
-                <Logo size="lg" showText showTagline to="/" className="mb-4 sm:mb-6 [&_img]:h-10 sm:[&_img]:h-14" />
-                <span className="inline-flex items-center gap-2 rounded-full border border-theme bg-[var(--bg-glass)] px-3 py-1.5 text-xs font-medium text-muted backdrop-blur-xl">
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
-                  {BRAND.tagline} · Powered by Llama-3.3
-                </span>
-              </motion.div>
+      <section className="relative flex flex-1 flex-col pb-24">
+        <div className="flex w-full flex-col gap-8 px-4 lg:gap-16">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Logo
+              size="lg"
+              showText
+              showTagline
+              to="/"
+              className="mb-5 [&_img]:h-10 sm:[&_img]:h-14"
+            />
+            <span className="inline-flex items-center gap-2 rounded-full border border-theme bg-[var(--bg-glass)] px-3 py-1.5 text-sm font-medium text-muted backdrop-blur-xl">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
+              {BRAND.tagline} · Powered by Llama-3.3
+            </span>
+          </motion.div>
 
-              <h1 className="text-3xl font-semibold tracking-tight text-primary sm:text-4xl md:text-5xl lg:text-7xl">
-                <WordReveal text="Engineering-grade" />
-                <br />
-                <span className="accent-shimmer">
-                  <WordReveal text="SQL Optimization." />
-                </span>
-              </h1>
+          <h1 className="text-4xl font-semibold tracking-tight text-primary sm:text-5xl lg:text-7xl">
+            <WordReveal text="Engineering-grade" />
+            <br />
+            <span className="accent-shimmer">
+              <WordReveal text="SQL Optimization." />
+            </span>
+          </h1>
 
-              <motion.p
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.55 }}
-                className="mx-auto max-w-lg text-base leading-relaxed text-muted sm:text-lg lg:mx-0"
-              >
-                Stop guessing about query performance. AutoTune-SQL uses AI and machine learning
-                to analyze, optimize, and predict slow queries before they hit production.
-              </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.55 }}
+            className="max-w-xl text-base leading-relaxed text-muted sm:text-lg"
+          >
+            Stop guessing about query performance. AutoTune-SQL uses AI and machine learning
+            to analyze, optimize, and predict slow queries before they hit production.
+          </motion.p>
 
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 lg:justify-start"
-              >
-                <MagneticButton onClick={() => goToProtectedRoute('/optimizer')} className="w-full sm:w-auto">
-                  Get Started
-                </MagneticButton>
-                <MagneticButton
-                  variant="secondary"
-                  onClick={() => goToProtectedRoute('/learn')}
-                  className="w-full sm:w-auto"
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+            className="flex w-full flex-col gap-3 sm:max-w-md sm:flex-row sm:gap-4 lg:max-w-none"
+          >
+            <MagneticButton
+              onClick={() => goToProtectedRoute('/optimizer')}
+              className="w-full !rounded-2xl !py-4 !text-base sm:w-auto"
+            >
+              Get Started
+            </MagneticButton>
+            <MagneticButton
+              variant="secondary"
+              onClick={() => goToProtectedRoute('/learn')}
+              className="w-full !rounded-2xl !py-4 !text-base sm:w-auto"
+            >
+              Open Academy
+            </MagneticButton>
+          </motion.div>
+
+          <div className="hero-graphic-mask -mx-4 w-[calc(100%+2rem)] lg:hidden">
+            <HeroSqlGraphic interactive={false} />
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.85 }}
+            className="flex items-center gap-4 pt-2 sm:gap-8 sm:pt-4"
+          >
+            <div className="flex -space-x-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[var(--bg-base)] bg-[var(--bg-elevated)] text-sm text-primary"
                 >
-                  Open Academy
-                </MagneticButton>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.85 }}
-                className="flex flex-col items-center gap-4 pt-2 sm:flex-row sm:gap-8 sm:pt-4 lg:items-center lg:justify-start"
-              >
-                <div className="flex -space-x-3">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[var(--bg-base)] bg-[var(--bg-elevated)] text-xs text-primary"
-                    >
-                      {String.fromCharCode(64 + i)}
-                    </div>
-                  ))}
+                  {String.fromCharCode(64 + i)}
                 </div>
-                <p className="text-sm text-muted">
-                  <span className="font-semibold text-primary">500+</span> engineers optimizing
-                  daily
-                </p>
-              </motion.div>
+              ))}
             </div>
+            <p className="text-base text-muted">
+              <span className="font-semibold text-primary">500+</span> engineers optimizing daily
+            </p>
+          </motion.div>
 
-            <div className="hidden lg:block">
-              <FloatingSqlBlock />
-            </div>
+          <div className="hidden lg:block">
+            <HeroSqlGraphic />
           </div>
         </div>
       </section>
 
-      <section className="relative px-4 pb-32">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <section className="relative pb-32">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
           <FeatureCard
             icon={Database}
             title="Dynamic Connections"

@@ -124,10 +124,10 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
   }, [sql, practiceLab]);
 
   return (
-    <section ref={containerRef} className="glass overflow-hidden rounded-2xl">
+    <section ref={containerRef} className="mobile-edge-card glass overflow-hidden rounded-none sm:rounded-2xl">
       <div className="flex flex-wrap items-center gap-2 border-b border-theme px-4 py-4 sm:px-6">
         <Terminal className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold text-primary">Practice Lab</h3>
+        <h3 className="text-lg font-semibold text-primary sm:text-xl">Practice Lab</h3>
         {passed && (
           <span className="ml-2 text-xs font-semibold text-emerald-400 flex items-center gap-1">
             <CheckCircle className="w-3.5 h-3.5" /> PASSED
@@ -171,7 +171,7 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
             <button
               onClick={handleRunQuery}
               disabled={running}
-              className="interactive-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--text-primary)] px-5 py-2.5 font-semibold text-[var(--bg-base)] hover:opacity-90 disabled:opacity-50 sm:w-auto"
+              className="interactive-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--text-primary)] px-5 py-3.5 text-base font-semibold text-[var(--bg-base)] hover:opacity-90 active:scale-95 disabled:opacity-50 sm:w-auto"
             >
               <Play className="w-4 h-4" />
               {running ? 'Running…' : 'Run Query'}

@@ -245,7 +245,7 @@ export function VideoPlayer({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
-      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-zinc-800">
+      <div className="relative aspect-video w-full overflow-hidden rounded-none border-0 bg-black sm:rounded-xl sm:border sm:border-zinc-800">
         {!activated ? (
           <button
             type="button"

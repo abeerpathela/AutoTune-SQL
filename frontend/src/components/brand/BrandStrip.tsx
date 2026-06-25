@@ -14,7 +14,7 @@ export function BrandStrip({ title, subtitle }: BrandStripProps) {
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-8 overflow-hidden rounded-2xl border border-theme bg-[var(--bg-glass)] backdrop-blur-xl"
+      className="mb-8 overflow-hidden rounded-none border-y border-theme bg-[var(--bg-glass)] backdrop-blur-xl sm:rounded-2xl sm:border"
     >
       <div className="relative flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div
