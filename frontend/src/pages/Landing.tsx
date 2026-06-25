@@ -1,8 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useEffect } from 'react';
-import { Database, Zap, Code, BarChart2 } from 'lucide-react';
-import { MagneticButton } from '../components/ui/InteractionLayer';
+import { Database, Zap, Code, BarChart2, ArrowRight } from 'lucide-react';
 import { SpotlightCard } from '../components/ui/SpotlightCard';
 import { Logo } from '../components/brand/Logo';
 import { BRAND } from '../lib/brand';
@@ -43,12 +42,12 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <SpotlightCard className="mobile-edge-card rounded-2xl p-5 sm:p-6">
-      <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-theme bg-[var(--bg-elevated)]">
-        <Icon className="h-6 w-6 text-primary" />
+    <SpotlightCard className="p-5 sm:p-6">
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-theme bg-[var(--bg-elevated)] sm:mb-5 sm:h-12 sm:w-12">
+        <Icon className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
       </div>
-      <h3 className="mb-2 text-lg font-semibold text-primary sm:text-xl">{title}</h3>
-      <p className="text-base leading-relaxed text-muted">{description}</p>
+      <h3 className="mb-1.5 text-base font-semibold text-primary sm:mb-2 sm:text-xl">{title}</h3>
+      <p className="text-sm leading-relaxed text-muted sm:text-base">{description}</p>
     </SpotlightCard>
   );
 }
@@ -97,14 +96,14 @@ function HeroSqlGraphic({ interactive = true }: { interactive?: boolean }) {
       }
       className="relative w-full"
     >
-      <div className="glass-strong rounded-none border-y border-theme p-5 shadow-glow-cyan sm:rounded-2xl sm:border sm:p-6">
-        <div className="mb-4 flex items-center gap-2 border-b border-theme pb-3">
-          <div className="h-3 w-3 rounded-full bg-red-500/80" />
-          <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
-          <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
-          <span className="ml-3 font-mono text-xs text-subtle sm:text-sm">optimizer.sql</span>
+      <div className="glass-strong rounded-2xl border border-theme p-4 shadow-glow-cyan sm:p-6">
+        <div className="mb-3 flex items-center gap-2 border-b border-theme pb-2.5 sm:mb-4 sm:pb-3">
+          <div className="h-2.5 w-2.5 rounded-full bg-red-500/80 sm:h-3 sm:w-3" />
+          <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/80 sm:h-3 sm:w-3" />
+          <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/80 sm:h-3 sm:w-3" />
+          <span className="ml-2 font-mono text-[11px] text-subtle sm:ml-3 sm:text-sm">optimizer.sql</span>
         </div>
-        <div className="space-y-1.5 font-mono text-sm sm:text-base">
+        <div className="space-y-1 font-mono text-[13px] leading-relaxed sm:space-y-1.5 sm:text-base">
           <div>
             <span className="text-subtle">1</span>{' '}
             <span className="text-cyan-400/90">EXPLAIN ANALYZE</span>{' '}
@@ -136,7 +135,7 @@ function HeroSqlGraphic({ interactive = true }: { interactive?: boolean }) {
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 1.2 }}
-          className="mt-4 rounded-lg border border-[var(--success-border)] bg-success-subtle px-3 py-2 text-sm font-medium text-success"
+          className="mt-3 rounded-lg border border-[var(--success-border)] bg-success-subtle px-3 py-1.5 text-xs font-medium text-success sm:mt-4 sm:py-2 sm:text-sm"
         >
           ✓ Index scan · 12ms · 94% faster
         </motion.div>
@@ -158,11 +157,13 @@ export const Landing = () => {
   };
 
   return (
-    <div className="relative z-10 -mx-4 flex min-h-screen flex-col sm:mx-0">
+    <div className="relative z-10 -mx-4 flex flex-col sm:mx-0">
       <div className="pointer-events-none absolute inset-0 grid-bg opacity-80" />
 
-      <section className="relative flex flex-1 flex-col pb-16 sm:pb-24">
-        <div className="flex w-full flex-col gap-5 px-4 sm:gap-8 lg:gap-16">
+      {/* ─── Hero Section ─── */}
+      <section className="relative flex flex-col pb-6 sm:pb-24">
+        <div className="flex w-full flex-col gap-4 px-4 sm:gap-8 lg:gap-16">
+          {/* Brand chip — compact on mobile */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -173,89 +174,95 @@ export const Landing = () => {
               showText
               showTagline
               to="/"
-              className="mb-4 [&_img]:h-9 sm:mb-5 sm:[&_img]:h-14"
+              className="mb-3 hidden sm:flex sm:mb-5 [&_img]:h-14"
             />
-            <span className="inline-flex items-center gap-2 rounded-full border border-theme bg-[var(--bg-glass)] px-3 py-1.5 text-sm font-medium text-muted backdrop-blur-xl">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-theme bg-[var(--bg-glass)] px-2.5 py-1 text-xs font-medium text-muted backdrop-blur-xl sm:px-3 sm:py-1.5 sm:text-sm">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400 sm:h-2 sm:w-2" />
               {BRAND.tagline} · Powered by Llama-3.3
             </span>
           </motion.div>
 
-          {/* Hero Heading — text-balance on mobile, tighter tracking */}
-          <h1 className="text-3xl font-semibold tracking-tighter text-primary sm:text-5xl sm:tracking-tight lg:text-7xl" style={{ textWrap: 'balance' }}>
+          {/* Hero Heading — large, tight, balanced */}
+          <h1 className="text-[2rem] font-bold leading-[1.1] tracking-tighter text-primary sm:text-5xl sm:font-semibold sm:tracking-tight lg:text-7xl" style={{ textWrap: 'balance' }}>
             <WordReveal text="Engineering-grade" />
             <br />
-            <span className="accent-shimmer">
+            <span className="accent-shimmer inline">
               <WordReveal text="SQL Optimization." />
             </span>
           </h1>
 
+          {/* Subheadline */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.55 }}
-            className="max-w-xl text-base leading-relaxed text-muted sm:text-lg"
+            className="max-w-xl text-[15px] leading-relaxed text-muted sm:text-lg"
           >
             Stop guessing about query performance. AutoTune-SQL uses AI and machine learning
             to analyze, optimize, and predict slow queries before they hit production.
           </motion.p>
 
-          {/* CTA Buttons — full-width stacked on mobile, inline on sm+ */}
+          {/* CTA Buttons — TRUE full-width stacked on mobile */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.7 }}
             className="flex w-full flex-col gap-3 sm:max-w-md sm:flex-row sm:gap-4 lg:max-w-none"
           >
-            <MagneticButton
+            <motion.button
               onClick={() => goToProtectedRoute('/optimizer')}
-              className="w-full !rounded-2xl !py-4 !text-base sm:w-auto"
+              whileTap={{ scale: 0.96 }}
+              className="btn-primary interactive-target flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold shadow-lg sm:w-auto"
             >
               Get Started
-            </MagneticButton>
-            <MagneticButton
-              variant="secondary"
+              <ArrowRight className="h-4 w-4" />
+            </motion.button>
+            <motion.button
               onClick={() => goToProtectedRoute('/learn')}
-              className="w-full !rounded-2xl !py-4 !text-base sm:w-auto"
+              whileTap={{ scale: 0.96 }}
+              className="btn-secondary interactive-target flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold backdrop-blur-xl sm:w-auto"
             >
               Open Academy
-            </MagneticButton>
+            </motion.button>
           </motion.div>
 
           {/* Hero SQL Graphic — below CTAs on mobile with mask-image fade */}
-          <div className="hero-graphic-mask -mx-4 w-[calc(100%+2rem)] lg:hidden">
+          <div className="hero-graphic-mask -mx-4 mt-1 w-[calc(100%+2rem)] sm:mt-0 lg:hidden">
             <HeroSqlGraphic interactive={false} />
           </div>
 
+          {/* Social proof — tight spacing */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.85 }}
-            className="flex items-center gap-4 pt-0 sm:gap-8 sm:pt-4"
+            className="-mt-2 flex items-center gap-3 sm:mt-0 sm:gap-8 sm:pt-4"
           >
-            <div className="flex -space-x-3">
+            <div className="flex -space-x-2.5">
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[var(--bg-base)] bg-[var(--bg-elevated)] text-sm text-primary"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[var(--bg-base)] bg-[var(--bg-elevated)] text-xs font-medium text-primary sm:h-10 sm:w-10 sm:text-sm"
                 >
                   {String.fromCharCode(64 + i)}
                 </div>
               ))}
             </div>
-            <p className="text-base text-muted">
+            <p className="text-sm text-muted sm:text-base">
               <span className="font-semibold text-primary">500+</span> engineers optimizing daily
             </p>
           </motion.div>
 
+          {/* Desktop-only interactive graphic */}
           <div className="hidden lg:block">
             <HeroSqlGraphic />
           </div>
         </div>
       </section>
 
-      <section className="relative pb-20 sm:pb-32">
-        <div className="grid grid-cols-1 gap-3 px-4 sm:gap-6 sm:px-0 md:grid-cols-2 lg:grid-cols-4">
+      {/* ─── Feature Cards ─── */}
+      <section className="relative pb-12 sm:pb-32">
+        <div className="grid grid-cols-1 gap-2.5 px-4 min-[420px]:grid-cols-2 sm:gap-6 sm:px-0 lg:grid-cols-4">
           <FeatureCard
             icon={Database}
             title="Dynamic Connections"

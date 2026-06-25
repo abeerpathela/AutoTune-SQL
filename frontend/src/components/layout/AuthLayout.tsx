@@ -19,7 +19,7 @@ type AuthLayoutProps = {
 
 export function AuthLayout({ children, heading, subheading }: AuthLayoutProps) {
   return (
-    <div className="relative mx-auto grid min-h-[calc(100vh-12rem)] max-w-6xl gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
+    <div className="relative mx-auto grid min-h-[calc(100vh-10rem)] max-w-6xl gap-6 sm:gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
       {/* Brand panel */}
       <motion.div
         initial={{ opacity: 0, x: -24 }}
@@ -38,7 +38,7 @@ export function AuthLayout({ children, heading, subheading }: AuthLayoutProps) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="text-3xl font-bold leading-tight text-primary md:text-4xl lg:text-5xl"
+          className="text-2xl font-bold leading-tight tracking-tight text-primary sm:text-3xl md:text-4xl lg:text-5xl"
         >
           Welcome to{' '}
           <span className="accent-shimmer">{BRAND.name}</span>
@@ -54,7 +54,7 @@ export function AuthLayout({ children, heading, subheading }: AuthLayoutProps) {
           and certifies your skills — all in one place.
         </motion.p>
 
-        <ul className="mt-10 space-y-4">
+        <ul className="mt-6 hidden space-y-4 sm:block sm:mt-10">
           {perks.map(({ icon: Icon, text }, i) => (
             <motion.li
               key={text}
@@ -75,7 +75,7 @@ export function AuthLayout({ children, heading, subheading }: AuthLayoutProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="mt-10 flex flex-wrap gap-3"
+          className="mt-6 hidden flex-wrap gap-3 sm:flex sm:mt-10"
         >
           {['500+ engineers', '36 chapters', 'Llama-3.3 AI'].map((badge) => (
             <span
@@ -95,7 +95,7 @@ export function AuthLayout({ children, heading, subheading }: AuthLayoutProps) {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="order-1 lg:order-2"
       >
-        <div className="glass-strong overflow-hidden rounded-3xl p-8 shadow-glow-cyan md:p-10">
+        <div className="glass-strong overflow-hidden rounded-2xl p-6 shadow-glow-cyan sm:rounded-3xl sm:p-8 md:p-10">
           <div className="mb-8 text-center lg:text-left">
             <h2 className="text-2xl font-bold text-primary md:text-3xl">{heading}</h2>
             <p className="mt-2 text-muted">{subheading}</p>

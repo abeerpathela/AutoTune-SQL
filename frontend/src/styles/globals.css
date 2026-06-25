@@ -234,6 +234,8 @@ body::after {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 .grid-bg {
@@ -467,35 +469,41 @@ html.light .dark\:prose-invert :where(h1, h2, h3, h4, strong) {
 @media (max-width: 639px) {
   body {
     font-size: 16px;
+    -webkit-text-size-adjust: 100%;
   }
 
   /* Mobile typography: tighter tracking on headings for modern look */
   h1, h2, h3 {
-    letter-spacing: -0.025em;
+    letter-spacing: -0.03em;
     text-wrap: balance;
   }
 
-  /* Reduce vertical padding between sections to increase information density */
+  /* Aggressive density: minimal vertical padding between sections */
   section {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
   }
 
   /* Scrollbar: thin on mobile */
   ::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 3px;
+    height: 3px;
   }
 
   ::-webkit-scrollbar-thumb {
-    border-radius: 4px;
+    border-radius: 3px;
+  }
+
+  /* Edge-to-edge cards on mobile */
+  .mobile-edge-card {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 }
 
+/* Base mobile-edge-card styling */
 .mobile-edge-card {
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
   background: rgba(24, 24, 27, 0.3);
 }
 
@@ -503,9 +511,16 @@ html.light .mobile-edge-card {
   background: rgba(255, 255, 255, 0.65);
 }
 
+/* On sm+, mobile-edge-card becomes a regular rounded card */
+@media (min-width: 640px) {
+  .mobile-edge-card {
+    border-radius: 1rem;
+  }
+}
+
 .hero-graphic-mask {
-  -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
 }
 
 /* ─── Safe area support for notched phones ───────────────────────── */

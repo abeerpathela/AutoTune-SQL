@@ -124,7 +124,7 @@ export const Navbar = () => {
       {/* ─── Fixed-Top Floating Pill Navbar ─── */}
       <motion.div
         style={{ opacity: navOpacity }}
-        className={`fixed top-0 left-0 right-0 z-50 ${isLanding ? 'pt-4' : 'pt-3 sm:pt-4'}`}
+        className={`fixed top-0 left-0 right-0 z-50 ${isLanding ? 'pt-2.5 sm:pt-4' : 'pt-2 sm:pt-4'}`}
       >
         <div className="mx-auto w-[92%] max-w-6xl sm:w-full sm:px-4">
           <motion.div
@@ -132,7 +132,7 @@ export const Navbar = () => {
             initial={{ y: -80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-            className={`flex w-full items-center gap-2 rounded-2xl px-3 py-2.5 transition-all duration-300 sm:gap-3 sm:rounded-full sm:px-4 sm:py-2.5 ${shellClass}`}
+            className={`flex w-full items-center gap-1.5 rounded-2xl px-2.5 py-2 transition-all duration-300 sm:gap-3 sm:rounded-full sm:px-4 sm:py-2.5 ${shellClass}`}
           >
             {/* Landing: icon-only to avoid duplicating hero branding */}
             {isLanding ? (
@@ -140,7 +140,7 @@ export const Navbar = () => {
                 <img
                   src={BRAND.logo}
                   alt="AutoTune-SQL"
-                  className="h-7 w-auto max-w-[110px] object-contain sm:h-9 sm:max-w-none"
+                  className="h-6 w-auto max-w-[100px] object-contain sm:h-9 sm:max-w-none"
                 />
               </Link>
             ) : (

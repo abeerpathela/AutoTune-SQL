@@ -6,7 +6,7 @@ import { Logo } from '../brand/Logo';
 export function Footer() {
   return (
     <footer className="relative z-10 mt-auto border-t border-theme bg-[var(--bg-glass)] backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-6 py-10 sm:flex-row">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-6 sm:gap-6 sm:px-6 sm:py-10 sm:flex-row">
         <Logo size="sm" showText showTagline to="/" />
 
         <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted">

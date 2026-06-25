@@ -399,8 +399,8 @@ JOIN orders o ON u.id = o.user_id;`);
     <div className="space-y-4 pb-28 sm:space-y-6 sm:pb-0">
       <BrandStrip title="SQL Optimizer" subtitle="Analyze, score risk, and rewrite queries with AI" />
       <div>
-        <h1 className="mb-2 text-3xl font-bold tracking-tighter text-white sm:text-4xl sm:tracking-tight">SQL Optimizer</h1>
-        <p className="text-base leading-relaxed text-gray-400">Analyze, score risk, and optimize your SQL queries with AI</p>
+        <h1 className="mb-1 text-2xl font-bold tracking-tighter text-white sm:mb-2 sm:text-4xl sm:tracking-tight">SQL Optimizer</h1>
+        <p className="hidden text-base leading-relaxed text-gray-400 sm:block">Analyze, score risk, and optimize your SQL queries with AI</p>
       </div>
 
       {/* Force flex-col on mobile */}

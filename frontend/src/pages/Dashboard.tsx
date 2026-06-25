@@ -53,7 +53,7 @@ export const Dashboard = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-6"
+      className="spotlight-card rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-4 sm:p-6"
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
         e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
@@ -65,9 +65,9 @@ export const Dashboard = () => {
           <Icon className="h-6 w-6" style={{ color }} />
         </div>
       </div>
-      <h3 className="text-2xl font-bold text-zinc-100 mb-1">{value}</h3>
-      <p className="text-sm text-zinc-400">{title}</p>
-      {description && <p className="text-xs text-zinc-500 mt-2">{description}</p>}
+      <h3 className="text-xl font-bold text-zinc-100 mb-0.5 sm:text-2xl sm:mb-1">{value}</h3>
+      <p className="text-xs text-zinc-400 sm:text-sm">{title}</p>
+      {description && <p className="hidden text-xs text-zinc-500 mt-2 sm:block">{description}</p>}
     </motion.div>
   );
 
@@ -85,13 +85,13 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       <BrandStrip title="Command Center" subtitle="Your SQL optimization hub" />
       <div>
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-4xl font-bold text-zinc-100 mb-2"
+          className="text-2xl font-bold tracking-tight text-zinc-100 mb-1 sm:text-4xl sm:mb-2"
         >
           <UserGreeting user={user} />
         </motion.h1>
@@ -99,7 +99,7 @@ export const Dashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-lg text-zinc-400"
+          className="text-sm text-zinc-400 sm:text-lg"
         >
           Here's what's happening with your SQL optimization today
         </motion.p>
@@ -147,7 +147,7 @@ export const Dashboard = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
         <StatCard
           icon={Database}
           title="Queries Optimized"
@@ -179,7 +179,7 @@ export const Dashboard = () => {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid gap-5 sm:gap-8 lg:grid-cols-3">
         {/* Learning Progress */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
