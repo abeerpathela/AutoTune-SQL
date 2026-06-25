@@ -161,23 +161,24 @@ export const Landing = () => {
     <div className="relative z-10 flex min-h-screen flex-col">
       <div className="pointer-events-none absolute inset-0 grid-bg opacity-80" />
 
-      <section className="relative flex flex-1 items-center pb-24">
+      <section className="relative flex flex-1 items-center px-4 pb-24">
         <div className="mx-auto w-full max-w-7xl">
-          <div className="grid items-center gap-16 lg:grid-cols-2">
-            <div className="space-y-8">
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
+            <div className="space-y-6 text-center sm:space-y-8 lg:text-left">
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
+                className="flex flex-col items-center lg:items-start"
               >
-                <Logo size="lg" showText showTagline to="/" className="mb-6" />
+                <Logo size="lg" showText showTagline to="/" className="mb-4 sm:mb-6 [&_img]:h-10 sm:[&_img]:h-14" />
                 <span className="inline-flex items-center gap-2 rounded-full border border-theme bg-[var(--bg-glass)] px-3 py-1.5 text-xs font-medium text-muted backdrop-blur-xl">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
                   {BRAND.tagline} · Powered by Llama-3.3
                 </span>
               </motion.div>
 
-              <h1 className="text-5xl font-semibold tracking-tight text-primary md:text-6xl lg:text-7xl">
+              <h1 className="text-3xl font-semibold tracking-tight text-primary sm:text-4xl md:text-5xl lg:text-7xl">
                 <WordReveal text="Engineering-grade" />
                 <br />
                 <span className="accent-shimmer">
@@ -189,7 +190,7 @@ export const Landing = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.55 }}
-                className="max-w-lg text-lg leading-relaxed text-muted"
+                className="mx-auto max-w-lg text-base leading-relaxed text-muted sm:text-lg lg:mx-0"
               >
                 Stop guessing about query performance. AutoTune-SQL uses AI and machine learning
                 to analyze, optimize, and predict slow queries before they hit production.
@@ -199,12 +200,16 @@ export const Landing = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.7 }}
-                className="flex flex-wrap items-center gap-4"
+                className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4 lg:justify-start"
               >
-                <MagneticButton onClick={() => goToProtectedRoute('/optimizer')}>
+                <MagneticButton onClick={() => goToProtectedRoute('/optimizer')} className="w-full sm:w-auto">
                   Get Started
                 </MagneticButton>
-                <MagneticButton variant="secondary" onClick={() => goToProtectedRoute('/learn')}>
+                <MagneticButton
+                  variant="secondary"
+                  onClick={() => goToProtectedRoute('/learn')}
+                  className="w-full sm:w-auto"
+                >
                   Open Academy
                 </MagneticButton>
               </motion.div>
@@ -213,7 +218,7 @@ export const Landing = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.85 }}
-                className="flex items-center gap-8 pt-4"
+                className="flex flex-col items-center gap-4 pt-2 sm:flex-row sm:gap-8 sm:pt-4 lg:items-center lg:justify-start"
               >
                 <div className="flex -space-x-3">
                   {[1, 2, 3, 4].map((i) => (
@@ -239,8 +244,8 @@ export const Landing = () => {
         </div>
       </section>
 
-      <section className="relative pb-32">
-        <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <section className="relative px-4 pb-32">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           <FeatureCard
             icon={Database}
             title="Dynamic Connections"

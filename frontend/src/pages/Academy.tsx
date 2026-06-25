@@ -41,9 +41,9 @@ export const Academy = () => {
     return (
       <div className="space-y-6">
         <ChapterHeaderSkeleton />
-        <div className="grid lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           <SidebarSkeleton />
-          <div className="lg:col-span-3 h-[400px] animate-pulse bg-zinc-800/40 rounded-2xl" />
+          <div className="h-[400px] animate-pulse rounded-2xl bg-zinc-800/40 lg:col-span-3" />
         </div>
       </div>
     );

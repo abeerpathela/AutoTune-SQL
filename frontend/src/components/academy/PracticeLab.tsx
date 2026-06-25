@@ -125,7 +125,7 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
 
   return (
     <section ref={containerRef} className="glass overflow-hidden rounded-2xl">
-      <div className="flex items-center gap-2 border-b border-theme px-6 py-4">
+      <div className="flex flex-wrap items-center gap-2 border-b border-theme px-4 py-4 sm:px-6">
         <Terminal className="h-5 w-5 text-primary" />
         <h3 className="text-lg font-semibold text-primary">Practice Lab</h3>
         {passed && (
@@ -142,16 +142,16 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
         </div>
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-0">
-          <div className="h-56 border-b border-zinc-800/60">
+          <div className="h-[192px] border-b border-zinc-800/60 sm:h-56">
             <Suspense
               fallback={
-                <div className="h-56 animate-pulse bg-zinc-800/40 flex items-center justify-center">
+                <div className="flex h-[192px] animate-pulse items-center justify-center bg-zinc-800/40 sm:h-56">
                   <span className="text-sm text-zinc-500">Loading editor…</span>
                 </div>
               }
             >
               <MonacoEditor
-                height="224px"
+                height="100%"
                 language="sql"
                 theme={isDark ? 'vs-dark' : 'light'}
                 value={sql}
@@ -167,11 +167,11 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
             </Suspense>
           </div>
 
-          <div className="px-6 py-4 flex flex-wrap items-center gap-3 border-b border-zinc-800/60">
+          <div className="flex flex-wrap items-center gap-3 border-b border-zinc-800/60 px-4 py-4 sm:px-6">
             <button
               onClick={handleRunQuery}
               disabled={running}
-              className="interactive-target inline-flex items-center gap-2 rounded-xl bg-[var(--text-primary)] px-5 py-2.5 font-semibold text-[var(--bg-base)] hover:opacity-90 disabled:opacity-50"
+              className="interactive-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--text-primary)] px-5 py-2.5 font-semibold text-[var(--bg-base)] hover:opacity-90 disabled:opacity-50 sm:w-auto"
             >
               <Play className="w-4 h-4" />
               {running ? 'Running…' : 'Run Query'}
@@ -186,19 +186,19 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
           </div>
 
           {error && (
-            <div className="mx-6 mt-4 flex items-start gap-2 rounded-xl border border-red-500/40 bg-red-950/20 px-4 py-3 text-sm text-red-300">
+            <div className="mx-4 mt-4 flex items-start gap-2 rounded-xl border border-red-500/40 bg-red-950/20 px-4 py-3 text-sm text-red-300 sm:mx-6">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               {error}
             </div>
           )}
 
           {columns.length > 0 && (
-            <div className="p-6">
-              <p className="text-xs text-zinc-500 mb-2 uppercase tracking-wider">
+            <div className="p-4 sm:p-6">
+              <p className="mb-2 text-xs uppercase tracking-wider text-zinc-500">
                 Results ({rows.length} row{rows.length !== 1 ? 's' : ''})
               </p>
-              <div className="overflow-auto max-h-64 rounded-xl border border-zinc-800">
-                <table className="w-full text-sm text-left">
+              <div className="max-h-64 overflow-x-auto overflow-y-auto rounded-xl border border-zinc-800">
+                <table className="min-w-full text-left text-sm">
                   <thead className="bg-zinc-800/80 sticky top-0">
                     <tr>
                       {columns.map((col) => (

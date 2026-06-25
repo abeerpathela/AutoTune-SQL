@@ -19,6 +19,7 @@ import { MagneticButton } from '../ui/InteractionLayer';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useAuth } from '../../contexts/AuthContext';
 import { BRAND } from '../../lib/brand';
+import { buildLoginPath } from '../../lib/redirect';
 import { UserGreeting } from '../UserGreeting';
 
 type NavItem = { to: string; label: string; icon?: LucideIcon };
@@ -87,25 +88,31 @@ export const Navbar = () => {
       style={{ opacity: navOpacity }}
       className={`fixed top-0 left-0 right-0 z-50 ${isLanding ? 'pt-5' : 'pt-4'}`}
     >
-      <div className="mx-auto max-w-6xl px-4">
+      <div className="mx-auto w-[95%] max-w-6xl px-0 sm:px-4">
         <motion.div
           style={{ scale: pillScale, y: pillY }}
           initial={{ y: -80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-          className={`flex items-center gap-2 rounded-2xl px-3 py-2 transition-all duration-300 sm:rounded-full sm:gap-3 sm:px-4 sm:py-2.5 ${shellClass}`}
+          className={`flex w-full items-center gap-1.5 rounded-2xl px-2.5 py-2 transition-all duration-300 sm:gap-3 sm:rounded-full sm:px-4 sm:py-2.5 ${shellClass}`}
         >
           {/* Landing: icon-only to avoid duplicating hero branding */}
           {isLanding ? (
-            <Link to="/" className="interactive-target shrink-0 rounded-lg p-1">
+            <Link to="/" className="interactive-target shrink-0 rounded-lg p-0.5 sm:p-1">
               <img
                 src={BRAND.logo}
                 alt="AutoTune-SQL"
-                className="h-9 w-auto object-contain"
+                className="h-7 w-auto max-w-[120px] object-contain sm:h-9 sm:max-w-none"
               />
             </Link>
           ) : (
-            <Logo size="md" showText showTagline to={user ? '/dashboard' : '/'} className="!gap-2" />
+            <Logo
+              size="md"
+              showText
+              showTagline
+              to={user ? '/dashboard' : '/'}
+              className="!gap-1.5 sm:!gap-2 [&_img]:h-7 [&_img]:max-w-[100px] sm:[&_img]:h-10 sm:[&_img]:max-w-none"
+            />
           )}
 
           {!isLanding && <div className="hidden h-6 w-px bg-[var(--border)] lg:block" />}
@@ -156,7 +163,7 @@ export const Navbar = () => {
             </p>
           )}
 
-          <div className={`flex items-center gap-2 ${isLanding ? 'ml-auto' : 'ml-auto'}`}>
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
             <div className="hidden md:block">
               {user ? (
                 <button
@@ -183,11 +190,12 @@ export const Navbar = () => {
               )}
             </div>
             <ThemeToggle />
-            {!isLanding && (
+            {(allNavItems.length > 0 || isLanding) && (
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="interactive-target rounded-full p-2 text-muted hover:text-primary lg:hidden"
                 aria-label="Toggle menu"
+                aria-expanded={isMobileMenuOpen}
               >
                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
@@ -196,7 +204,7 @@ export const Navbar = () => {
         </motion.div>
 
         <AnimatePresence>
-          {isMobileMenuOpen && !isLanding && (
+          {isMobileMenuOpen && (
             <motion.div
               initial={{ opacity: 0, y: -12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -205,6 +213,31 @@ export const Navbar = () => {
               className="glass-strong mt-2 rounded-2xl border border-theme p-3 shadow-2xl lg:hidden"
             >
               <nav className="flex flex-col gap-1">
+                {isLanding && !user && (
+                  <>
+                    <Link
+                      to={buildLoginPath('/optimizer')}
+                      className="interactive-target flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-medium text-muted hover:bg-[var(--accent-glow)]"
+                    >
+                      <Zap className="h-4 w-4" />
+                      Optimizer
+                    </Link>
+                    <Link
+                      to={buildLoginPath('/learn')}
+                      className="interactive-target flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-medium text-muted hover:bg-[var(--accent-glow)]"
+                    >
+                      <GraduationCap className="h-4 w-4" />
+                      Academy
+                    </Link>
+                    <Link
+                      to={buildLoginPath('/dashboard')}
+                      className="interactive-target flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-medium text-muted hover:bg-[var(--accent-glow)]"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </>
+                )}
                 {allNavItems.map((item) => (
                   <Link
                     key={item.to}

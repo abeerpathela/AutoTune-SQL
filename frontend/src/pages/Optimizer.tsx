@@ -376,19 +376,19 @@ JOIN orders o ON u.id = o.user_id;`);
     <div className="space-y-6">
       <BrandStrip title="SQL Optimizer" subtitle="Analyze, score risk, and rewrite queries with AI" />
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">SQL Optimizer</h1>
+        <h1 className="mb-2 text-2xl font-bold text-white sm:text-3xl">SQL Optimizer</h1>
         <p className="text-gray-400">Analyze, score risk, and optimize your SQL queries with AI</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-400 mb-1">Database</label>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="min-w-0 space-y-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="w-full flex-1">
+              <label className="mb-1 block text-sm font-medium text-gray-400">Database</label>
               <select
                 value={selectedConnectionId || ''}
                 onChange={(e) => setSelectedConnectionId(e.target.value || null)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Demo Database</option>
                 {connections.map((conn) => (
@@ -398,11 +398,11 @@ JOIN orders o ON u.id = o.user_id;`);
                 ))}
               </select>
             </div>
-            <div className="flex-shrink-0 mt-6">
+            <div className="w-full shrink-0 sm:w-auto">
               <button
                 onClick={handleAnalyze}
                 disabled={loading}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto"
               >
                 {loading ? (
                   <>
@@ -419,7 +419,7 @@ JOIN orders o ON u.id = o.user_id;`);
             </div>
           </div>
           <h3 className="text-lg font-semibold text-white">Original SQL</h3>
-          <div className="h-[500px] border border-gray-800 rounded-xl overflow-hidden">
+          <div className="h-[300px] overflow-hidden rounded-xl border border-gray-800 sm:h-[400px] lg:h-[500px]">
             <Editor
               height="100%"
               defaultLanguage="sql"
@@ -431,8 +431,8 @@ JOIN orders o ON u.id = o.user_id;`);
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex gap-2 border-b border-gray-800 pb-2">
+        <div className="min-w-0 space-y-4">
+          <div className="-mx-1 flex gap-2 overflow-x-auto border-b border-gray-800 pb-2 sm:mx-0">
             {[
               { id: 'optimized', label: 'AI Optimization', icon: CheckCircle2 },
               { id: 'explanation', label: 'AI Explanation', icon: AlertCircle },
@@ -441,9 +441,9 @@ JOIN orders o ON u.id = o.user_id;`);
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition-all ${
+                className={`flex shrink-0 items-center gap-2 rounded-t-lg px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:text-sm ${
                   activeTab === tab.id
-                    ? 'bg-gray-800 text-blue-400 border border-b-0 border-gray-800'
+                    ? 'border border-b-0 border-gray-800 bg-gray-800 text-blue-400'
                     : 'text-gray-500 hover:text-gray-300'
                 }`}
               >
@@ -453,7 +453,7 @@ JOIN orders o ON u.id = o.user_id;`);
               </button>
             ))}
           </div>
-          <div className="h-[500px] border border-gray-800 rounded-xl overflow-hidden bg-gray-900">
+          <div className="h-[300px] overflow-hidden rounded-xl border border-gray-800 bg-gray-900 sm:h-[400px] lg:h-[500px]">
             {renderTabContent()}
           </div>
         </div>

@@ -32,7 +32,7 @@ function App() {
             <div className="relative flex min-h-screen flex-col bg-base text-muted transition-colors duration-300">
               <MouseFollower />
               <Navbar />
-              <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 px-6 pb-8 pt-24 sm:pt-28">
+              <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-28">
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}

@@ -15,6 +15,7 @@ type AcademySidebarProps = {
   activeGlobalOrder: number;
   quizActive?: boolean;
   onNavigate?: () => void;
+  className?: string;
 };
 
 function isUnlockedByProgress(
@@ -35,6 +36,7 @@ export const AcademySidebar = memo(function AcademySidebar({
   activeGlobalOrder,
   quizActive = false,
   onNavigate,
+  className = '',
 }: AcademySidebarProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -112,9 +114,9 @@ export const AcademySidebar = memo(function AcademySidebar({
       )}
 
       <aside
-        className={`glass lg:col-span-1 flex max-h-[80vh] flex-col rounded-2xl p-3 ${
+        className={`glass flex max-h-[80vh] flex-col rounded-2xl p-3 lg:col-span-1 ${
           quizActive ? 'pointer-events-none select-none opacity-40' : ''
-        }`}
+        } ${className}`}
       >
         <div className="flex-1 space-y-4 overflow-y-auto pr-1">
           {moduleTitles.map((moduleTitle) => (

@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Check,
   BookOpen,
   CheckCircle,
   ChevronRightCircle,
+  ChevronDown,
+  List,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { VideoPlayer, type VideoWatchStats } from '../components/academy/VideoPlayer';
@@ -41,9 +44,14 @@ export const ChapterPage = () => {
   const [contentLoading, setContentLoading] = useState(true);
   const [completingVideo, setCompletingVideo] = useState(false);
   const [quizActive, setQuizActive] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [watchStats, setWatchStats] = useState<VideoWatchStats | null>(null);
   const lastSyncedPercentRef = useRef(0);
   const syncInFlightRef = useRef(false);
+
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [chapterOrder]);
 
   const loadCatalog = useCallback(async () => {
     const catalogRes = await api.getAcademyCatalog();
@@ -226,7 +234,7 @@ export const ChapterPage = () => {
     return (
       <div className="space-y-6">
         <ChapterHeaderSkeleton />
-        <div className="grid lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           <SidebarSkeleton />
           <div className="lg:col-span-3">
             <ChapterContentSkeleton />
@@ -279,7 +287,7 @@ export const ChapterPage = () => {
           <Logo size="sm" showText={false} className="hidden shrink-0 sm:block" />
           <div>
             <p className="text-sm text-violet-400 font-medium">{chapter.moduleTitle}</p>
-            <h1 className="text-3xl font-bold text-zinc-100 mt-1">AutoTune Academy</h1>
+            <h1 className="mt-1 text-2xl font-bold text-zinc-100 sm:text-3xl">AutoTune Academy</h1>
             <p className="text-zinc-400 mt-1">
               Chapter {chapter.globalOrder} of {TOTAL_CHAPTERS} · {completedCount} completed
             </p>
@@ -298,14 +306,72 @@ export const ChapterPage = () => {
         </div>
       </motion.div>
 
-      <div className="grid lg:grid-cols-4 gap-6">
-        <AcademySidebar
-          catalog={catalog}
-          activeGlobalOrder={chapter.globalOrder ?? chapterOrder}
-          quizActive={quizActive}
-        />
+      <button
+        type="button"
+        onClick={() => setMobileSidebarOpen(true)}
+        className="interactive-target flex w-full items-center justify-between gap-3 rounded-xl border border-theme bg-[var(--bg-glass)] px-4 py-3 text-left lg:hidden"
+        aria-label="Open chapter list"
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          <List className="h-4 w-4 shrink-0 text-violet-400" />
+          <span className="truncate text-sm font-medium text-primary">
+            Ch. {chapter.globalOrder}: {chapter.title}
+          </span>
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted" />
+      </button>
 
-        <main className="lg:col-span-3 space-y-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="hidden lg:block">
+          <AcademySidebar
+            catalog={catalog}
+            activeGlobalOrder={chapter.globalOrder ?? chapterOrder}
+            quizActive={quizActive}
+          />
+        </div>
+
+        <AnimatePresence>
+          {mobileSidebarOpen && (
+            <>
+              <motion.button
+                type="button"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+                aria-label="Close chapter list"
+                onClick={() => setMobileSidebarOpen(false)}
+              />
+              <motion.div
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                className="fixed inset-y-0 left-0 z-50 w-[min(100%,20rem)] p-4 lg:hidden"
+              >
+                <div className="relative h-full">
+                  <button
+                    type="button"
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className="absolute right-2 top-2 z-10 rounded-lg p-2 text-muted hover:text-primary"
+                    aria-label="Close chapter list"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <AcademySidebar
+                    catalog={catalog}
+                    activeGlobalOrder={chapter.globalOrder ?? chapterOrder}
+                    quizActive={quizActive}
+                    onNavigate={() => setMobileSidebarOpen(false)}
+                    className="h-full max-h-none"
+                  />
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        <main className="min-w-0 space-y-6 lg:col-span-3">
           {contentLoading ? (
             <ChapterContentSkeleton isVideo={isVideo} />
           ) : (
@@ -324,7 +390,7 @@ export const ChapterPage = () => {
                   {theoryContent && (
                     <motion.section
                       layoutId="chapter-theory"
-                      className="glass prose prose-sm max-w-none rounded-2xl p-6 dark:prose-invert"
+                      className="glass prose prose-sm max-w-none rounded-2xl p-4 dark:prose-invert sm:p-6"
                     >
                       <ReactMarkdown>{theoryContent}</ReactMarkdown>
                     </motion.section>
@@ -399,7 +465,7 @@ export const ChapterPage = () => {
                 <>
                   <motion.section
                     layoutId="chapter-theory"
-                    className="glass rounded-2xl p-8"
+                    className="glass rounded-2xl p-4 sm:p-6 lg:p-8"
                   >
                     <div className="mb-4 flex items-center gap-2">
                       <BookOpen className="h-5 w-5 text-primary" />

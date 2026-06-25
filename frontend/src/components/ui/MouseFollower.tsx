@@ -7,6 +7,7 @@ const INTERACTIVE_SELECTOR =
 
 export function MouseFollower() {
   const { isDark } = useTheme();
+  const [enabled, setEnabled] = useState(false);
   const mouseX = useMotionValue(-400);
   const mouseY = useMotionValue(-400);
   const size = useMotionValue(280);
@@ -20,6 +21,16 @@ export function MouseFollower() {
   const [hoveringInteractive, setHoveringInteractive] = useState(false);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia('(pointer: fine)');
+    const updateEnabled = () => setEnabled(mediaQuery.matches);
+    updateEnabled();
+    mediaQuery.addEventListener('change', updateEnabled);
+    return () => mediaQuery.removeEventListener('change', updateEnabled);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+
     const handleMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
@@ -40,7 +51,9 @@ export function MouseFollower() {
       window.removeEventListener('mousemove', handleMove);
       document.documentElement.removeEventListener('mouseleave', handleLeave);
     };
-  }, [mouseX, mouseY, size, opacity, isDark]);
+  }, [mouseX, mouseY, size, opacity, isDark, enabled]);
+
+  if (!enabled) return null;
 
   const gradient = isDark
     ? hoveringInteractive
