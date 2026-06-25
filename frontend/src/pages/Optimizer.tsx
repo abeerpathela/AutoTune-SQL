@@ -47,9 +47,8 @@ const ErrorCard = ({ error }: { error: StructuredQueryError }) => {
 
   return (
     <div
-      className={`p-6 rounded-xl border-2 ${
-        isRed ? 'border-red-500/60 bg-red-950/20' : 'border-yellow-500/60 bg-yellow-950/20'
-      }`}
+      className={`p-6 rounded-2xl border-2 ${isRed ? 'border-red-500/60 bg-red-950/20' : 'border-yellow-500/60 bg-yellow-950/20'
+        }`}
     >
       <div className="flex items-start gap-4">
         <AlertCircle className={`w-10 h-10 flex-shrink-0 ${isRed ? 'text-red-400' : 'text-yellow-400'}`} />
@@ -76,7 +75,7 @@ const ErrorCard = ({ error }: { error: StructuredQueryError }) => {
 };
 
 const PerformanceWarningCard = ({ title, items }: { title: string; items: string[] }) => (
-  <div className="p-4 rounded-xl border-2 border-yellow-500/60 bg-yellow-950/20 mb-4">
+  <div className="p-4 rounded-2xl border-2 border-yellow-500/60 bg-yellow-950/20 mb-4">
     <div className="flex items-center gap-2 mb-2">
       <AlertTriangle className="w-5 h-5 text-yellow-400" />
       <h4 className="text-sm font-semibold text-yellow-200">{title}</h4>
@@ -125,12 +124,13 @@ JOIN orders o ON u.id = o.user_id;`);
   }, []);
 
   const editorOptions = {
-    minimap: { enabled: false },
+    minimap: { enabled: !isMobile },
     fontSize: isMobile ? 15 : 14,
     wordWrap: 'on' as const,
     lineNumbers: isMobile ? ('off' as const) : ('on' as const),
     scrollBeyondLastLine: false,
     padding: { top: isMobile ? 16 : 12 },
+    scrollbar: isMobile ? { vertical: 'hidden' as const, horizontal: 'hidden' as const } : undefined,
   };
 
   const scrollToResults = () => {
@@ -262,21 +262,19 @@ JOIN orders o ON u.id = o.user_id;`);
     const label = probability > 60 ? 'HIGH RISK' : probability > 30 ? 'MEDIUM RISK' : 'LOW RISK';
 
     return (
-      <div className="p-8 bg-gray-900 rounded-xl border border-gray-800">
+      <div className="p-6 bg-gray-900 rounded-2xl border border-gray-800 sm:p-8">
         <h3 className="text-xl font-semibold text-white mb-6">ML Risk Score</h3>
         <div className="space-y-6">
           <div className="text-center">
             <div
-              className={`text-6xl font-bold mb-2 ${
-                probability > 60 ? 'text-red-400' : probability > 30 ? 'text-yellow-400' : 'text-emerald-400'
-              }`}
+              className={`text-5xl font-bold mb-2 sm:text-6xl ${probability > 60 ? 'text-red-400' : probability > 30 ? 'text-yellow-400' : 'text-emerald-400'
+                }`}
             >
               {probability.toFixed(1)}%
             </div>
             <div
-              className={`text-lg font-medium ${
-                probability > 60 ? 'text-red-300' : probability > 30 ? 'text-yellow-300' : 'text-emerald-300'
-              }`}
+              className={`text-lg font-medium ${probability > 60 ? 'text-red-300' : probability > 30 ? 'text-yellow-300' : 'text-emerald-300'
+                }`}
             >
               {label}
             </div>
@@ -398,15 +396,16 @@ JOIN orders o ON u.id = o.user_id;`);
   };
 
   return (
-    <div className="space-y-6 pb-28 sm:pb-0">
+    <div className="space-y-4 pb-28 sm:space-y-6 sm:pb-0">
       <BrandStrip title="SQL Optimizer" subtitle="Analyze, score risk, and rewrite queries with AI" />
       <div>
-        <h1 className="mb-2 text-3xl font-bold text-white sm:text-4xl">SQL Optimizer</h1>
+        <h1 className="mb-2 text-3xl font-bold tracking-tighter text-white sm:text-4xl sm:tracking-tight">SQL Optimizer</h1>
         <p className="text-base leading-relaxed text-gray-400">Analyze, score risk, and optimize your SQL queries with AI</p>
       </div>
 
-      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-2">
-        <div className="mobile-edge-card -mx-4 min-w-0 space-y-4 rounded-none border-y border-gray-800/80 bg-zinc-900/30 px-4 py-5 sm:mx-0 sm:rounded-xl sm:border sm:px-5 lg:border-gray-800">
+      {/* Force flex-col on mobile */}
+      <div className="flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-2">
+        <div className="mobile-edge-card -mx-4 min-w-0 space-y-4 rounded-none border-y border-gray-800/80 bg-zinc-900/30 px-4 py-5 sm:mx-0 sm:rounded-2xl sm:border sm:px-5 lg:border-gray-800">
           <div className="hidden flex-col gap-4 sm:flex sm:flex-row sm:items-end sm:justify-between lg:flex">
             <div className="w-full flex-1">
               <label className="mb-2 block text-sm font-semibold text-gray-300">Database</label>
@@ -427,7 +426,7 @@ JOIN orders o ON u.id = o.user_id;`);
               <motion.button
                 onClick={handleAnalyze}
                 disabled={loading}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.96 }}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto"
               >
                 {loading ? (
@@ -462,7 +461,8 @@ JOIN orders o ON u.id = o.user_id;`);
           </div>
 
           <h3 className="text-lg font-semibold text-white sm:text-xl">Original SQL</h3>
-          <div className="h-[40vh] overflow-hidden rounded-xl border border-gray-800 sm:h-[400px] lg:h-[500px]">
+          {/* Responsive height: min-h-[350px] on mobile, fixed on larger */}
+          <div className="min-h-[350px] overflow-hidden rounded-2xl border border-gray-800 sm:h-[400px] lg:h-[500px]">
             <Editor
               height="100%"
               defaultLanguage="sql"
@@ -476,9 +476,9 @@ JOIN orders o ON u.id = o.user_id;`);
 
         <div
           ref={resultsRef}
-          className="mobile-edge-card -mx-4 min-w-0 space-y-4 rounded-none border-y border-gray-800/80 bg-zinc-900/30 px-4 py-5 sm:mx-0 sm:rounded-xl sm:border sm:px-5 lg:border-gray-800"
+          className="mobile-edge-card -mx-4 min-w-0 space-y-4 rounded-none border-y border-gray-800/80 bg-zinc-900/30 px-4 py-5 sm:mx-0 sm:rounded-2xl sm:border sm:px-5 lg:border-gray-800"
         >
-          <div className="-mx-1 flex gap-2 overflow-x-auto border-b border-gray-800 pb-2 sm:mx-0">
+          <div className="-mx-1 flex gap-2 overflow-x-auto scrollbar-thin border-b border-gray-800 pb-2 sm:mx-0">
             {[
               { id: 'optimized', label: 'Optimization', icon: CheckCircle2 },
               { id: 'explanation', label: 'Explanation', icon: AlertCircle },
@@ -487,12 +487,11 @@ JOIN orders o ON u.id = o.user_id;`);
               <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                whileTap={{ scale: 0.95 }}
-                className={`flex shrink-0 items-center gap-2 rounded-t-xl px-4 py-2.5 text-sm font-semibold transition-all ${
-                  activeTab === tab.id
+                whileTap={{ scale: 0.96 }}
+                className={`flex shrink-0 items-center gap-2 rounded-t-xl px-4 py-2.5 text-sm font-semibold transition-all ${activeTab === tab.id
                     ? 'border border-b-0 border-gray-800 bg-gray-800 text-blue-400'
                     : 'text-gray-500 hover:text-gray-300'
-                }`}
+                  }`}
               >
                 <tab.icon className="h-4 w-4" />
                 {tab.label}
@@ -500,19 +499,20 @@ JOIN orders o ON u.id = o.user_id;`);
               </motion.button>
             ))}
           </div>
-          <div className="h-[40vh] overflow-hidden rounded-xl border border-gray-800 bg-gray-900 sm:h-[400px] lg:h-[500px]">
+          <div className="min-h-[350px] overflow-hidden rounded-2xl border border-gray-800 bg-gray-900 sm:h-[400px] lg:h-[500px]">
             {renderTabContent()}
           </div>
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-800/80 bg-zinc-950/95 px-4 py-3 backdrop-blur-xl sm:hidden">
+      {/* ─── Fixed-Bottom Glassmorphism Action Bar (Mobile Only) ─── */}
+      <div className="fixed inset-x-0 bottom-0 z-40 glass-action-bar px-4 py-3 safe-bottom sm:hidden">
         <div className="mx-auto flex max-w-lg gap-3">
           <motion.button
             onClick={handleAnalyze}
             disabled={loading}
-            whileTap={{ scale: 0.95 }}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-base font-bold text-white disabled:opacity-50"
+            whileTap={{ scale: 0.96 }}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-base font-bold text-white shadow-lg shadow-blue-600/20 disabled:opacity-50"
           >
             {loading ? (
               <>
@@ -529,11 +529,11 @@ JOIN orders o ON u.id = o.user_id;`);
           <motion.button
             onClick={scrollToResults}
             disabled={!optimizerState.analysisData && !optimizerState.optimizationData}
-            whileTap={{ scale: 0.95 }}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-700 bg-gray-800 py-4 text-base font-bold text-white disabled:opacity-40"
+            whileTap={{ scale: 0.96 }}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-gray-700 bg-gray-800 py-4 text-base font-bold text-white disabled:opacity-40"
           >
             <Sparkles className="h-5 w-5 text-violet-400" />
-            Optimize
+            Results
           </motion.button>
         </div>
       </div>

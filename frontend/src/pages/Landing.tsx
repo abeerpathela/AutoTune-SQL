@@ -43,7 +43,7 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <SpotlightCard className="mobile-edge-card p-5 sm:rounded-2xl sm:p-6">
+    <SpotlightCard className="mobile-edge-card rounded-2xl p-5 sm:p-6">
       <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-theme bg-[var(--bg-elevated)]">
         <Icon className="h-6 w-6 text-primary" />
       </div>
@@ -161,8 +161,8 @@ export const Landing = () => {
     <div className="relative z-10 -mx-4 flex min-h-screen flex-col sm:mx-0">
       <div className="pointer-events-none absolute inset-0 grid-bg opacity-80" />
 
-      <section className="relative flex flex-1 flex-col pb-24">
-        <div className="flex w-full flex-col gap-8 px-4 lg:gap-16">
+      <section className="relative flex flex-1 flex-col pb-16 sm:pb-24">
+        <div className="flex w-full flex-col gap-5 px-4 sm:gap-8 lg:gap-16">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -173,7 +173,7 @@ export const Landing = () => {
               showText
               showTagline
               to="/"
-              className="mb-5 [&_img]:h-10 sm:[&_img]:h-14"
+              className="mb-4 [&_img]:h-9 sm:mb-5 sm:[&_img]:h-14"
             />
             <span className="inline-flex items-center gap-2 rounded-full border border-theme bg-[var(--bg-glass)] px-3 py-1.5 text-sm font-medium text-muted backdrop-blur-xl">
               <span className="h-2 w-2 animate-pulse rounded-full bg-cyan-400" />
@@ -181,7 +181,8 @@ export const Landing = () => {
             </span>
           </motion.div>
 
-          <h1 className="text-4xl font-semibold tracking-tight text-primary sm:text-5xl lg:text-7xl">
+          {/* Hero Heading — text-balance on mobile, tighter tracking */}
+          <h1 className="text-3xl font-semibold tracking-tighter text-primary sm:text-5xl sm:tracking-tight lg:text-7xl" style={{ textWrap: 'balance' }}>
             <WordReveal text="Engineering-grade" />
             <br />
             <span className="accent-shimmer">
@@ -199,6 +200,7 @@ export const Landing = () => {
             to analyze, optimize, and predict slow queries before they hit production.
           </motion.p>
 
+          {/* CTA Buttons — full-width stacked on mobile, inline on sm+ */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -220,6 +222,7 @@ export const Landing = () => {
             </MagneticButton>
           </motion.div>
 
+          {/* Hero SQL Graphic — below CTAs on mobile with mask-image fade */}
           <div className="hero-graphic-mask -mx-4 w-[calc(100%+2rem)] lg:hidden">
             <HeroSqlGraphic interactive={false} />
           </div>
@@ -228,7 +231,7 @@ export const Landing = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.85 }}
-            className="flex items-center gap-4 pt-2 sm:gap-8 sm:pt-4"
+            className="flex items-center gap-4 pt-0 sm:gap-8 sm:pt-4"
           >
             <div className="flex -space-x-3">
               {[1, 2, 3, 4].map((i) => (
@@ -251,8 +254,8 @@ export const Landing = () => {
         </div>
       </section>
 
-      <section className="relative pb-32">
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <section className="relative pb-20 sm:pb-32">
+        <div className="grid grid-cols-1 gap-3 px-4 sm:gap-6 sm:px-0 md:grid-cols-2 lg:grid-cols-4">
           <FeatureCard
             icon={Database}
             title="Dynamic Connections"

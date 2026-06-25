@@ -66,7 +66,7 @@ export function MouseFollower() {
   return (
     <motion.div
       aria-hidden
-      className="pointer-events-none fixed z-[5] rounded-full mix-blend-screen"
+      className="pointer-events-none fixed z-[5] hidden rounded-full mix-blend-screen md:block"
       style={{
         left: springX,
         top: springY,

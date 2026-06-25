@@ -35,7 +35,7 @@ export const MagneticButton = ({
       disabled={disabled}
       style={{ x, y }}
       whileHover={{ scale: disabled ? 1 : 1.02 }}
-      whileTap={{ scale: disabled ? 1 : 0.95 }}
+      whileTap={{ scale: disabled ? 1 : 0.96 }}
       className={`interactive-target relative overflow-hidden rounded-full px-7 py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-50 ${variantClass} ${className}`}
       {...handlers}
     >

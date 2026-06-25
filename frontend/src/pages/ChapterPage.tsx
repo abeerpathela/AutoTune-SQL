@@ -285,7 +285,8 @@ export const ChapterPage = () => {
     (watchStats?.canMarkComplete ?? savedWatchPercent >= 80);
 
   return (
-    <div className="-mx-4 space-y-5 px-0 sm:mx-0 sm:space-y-6">
+    <div className="-mx-4 space-y-4 px-0 sm:mx-0 sm:space-y-6">
+      {/* ─── Header ─── */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -295,8 +296,8 @@ export const ChapterPage = () => {
           <Logo size="sm" showText={false} className="hidden shrink-0 sm:block" />
           <div>
             <p className="text-sm font-semibold text-violet-400">{chapter.moduleTitle}</p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-100 sm:text-4xl">AutoTune Academy</h1>
-            <p className="mt-2 text-base leading-relaxed text-zinc-400">
+            <h1 className="mt-1 text-2xl font-bold tracking-tighter text-zinc-100 sm:text-4xl sm:tracking-tight">AutoTune Academy</h1>
+            <p className="mt-1 text-sm leading-relaxed text-zinc-400 sm:mt-2 sm:text-base">
               Chapter {chapter.globalOrder} of {TOTAL_CHAPTERS} · {completedCount} completed
             </p>
           </div>
@@ -314,11 +315,12 @@ export const ChapterPage = () => {
         </div>
       </motion.div>
 
+      {/* ─── Mobile Chapter Selector (FAB-style bar) ─── */}
       <motion.button
         type="button"
         onClick={() => setMobileSidebarOpen(true)}
-        whileTap={{ scale: 0.98 }}
-        className="interactive-target mx-4 flex w-[calc(100%-2rem)] items-center justify-between gap-3 rounded-full border border-theme bg-zinc-900/40 px-5 py-3.5 text-left backdrop-blur-sm lg:hidden"
+        whileTap={{ scale: 0.96 }}
+        className="interactive-target mx-4 flex w-[calc(100%-2rem)] items-center justify-between gap-3 rounded-2xl border border-theme bg-zinc-900/40 px-5 py-3.5 text-left backdrop-blur-sm lg:hidden"
         aria-label="Open chapter list"
       >
         <span className="flex min-w-0 items-center gap-3">
@@ -327,7 +329,7 @@ export const ChapterPage = () => {
           </span>
           <span className="min-w-0">
             <span className="block text-xs font-semibold uppercase tracking-wider text-violet-400">
-              Chapter selector
+              Chapters
             </span>
             <span className="block truncate text-base font-semibold text-primary">{chapter.title}</span>
           </span>
@@ -336,6 +338,7 @@ export const ChapterPage = () => {
       </motion.button>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        {/* ─── Desktop Sidebar ─── */}
         <div className="hidden lg:block">
           <AcademySidebar
             catalog={catalog}
@@ -344,6 +347,7 @@ export const ChapterPage = () => {
           />
         </div>
 
+        {/* ─── Mobile Bottom Sheet Sidebar ─── */}
         <AnimatePresence>
           {mobileSidebarOpen && (
             <>
@@ -363,9 +367,11 @@ export const ChapterPage = () => {
                 transition={{ type: 'spring', stiffness: 340, damping: 36 }}
                 className="fixed inset-x-0 bottom-0 z-[70] max-h-[88vh] overflow-hidden rounded-t-[1.75rem] border-t border-theme bg-[var(--bg-elevated)] shadow-[0_-24px_80px_rgba(0,0,0,0.45)] lg:hidden"
               >
+                {/* Drag indicator */}
                 <div className="flex justify-center pt-3 pb-1">
                   <div className="h-1 w-12 rounded-full bg-[var(--border-strong)]" />
                 </div>
+                {/* Header */}
                 <div className="flex items-center justify-between border-b border-theme px-5 pb-4 pt-2">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-subtle">
@@ -378,14 +384,15 @@ export const ChapterPage = () => {
                   <motion.button
                     type="button"
                     onClick={() => setMobileSidebarOpen(false)}
-                    whileTap={{ scale: 0.95 }}
+                    whileTap={{ scale: 0.96 }}
                     className="rounded-full p-2 text-muted hover:text-primary"
                     aria-label="Close chapter list"
                   >
                     <X className="h-5 w-5" />
                   </motion.button>
                 </div>
-                <div className="max-h-[calc(88vh-8.5rem)] overflow-y-auto px-4 pb-8 pt-2">
+                {/* Chapter list with safe area padding */}
+                <div className="max-h-[calc(88vh-8.5rem)] overflow-y-auto px-4 pb-8 pt-2 safe-bottom">
                   <AcademySidebar
                     catalog={catalog}
                     activeGlobalOrder={chapter.globalOrder ?? chapterOrder}
@@ -399,15 +406,16 @@ export const ChapterPage = () => {
           )}
         </AnimatePresence>
 
-        <main className="min-w-0 space-y-5 px-4 sm:space-y-6 sm:px-0 lg:col-span-3">
+        {/* ─── Main Content ─── */}
+        <main className="min-w-0 space-y-4 px-4 sm:space-y-6 sm:px-0 lg:col-span-3">
           {contentLoading ? (
             <ChapterContentSkeleton isVideo={isVideo} />
           ) : (
             <>
-              <h2 className="text-2xl font-bold tracking-tight text-zinc-100 sm:text-3xl">{chapter.title}</h2>
+              <h2 className="text-xl font-bold tracking-tight text-zinc-100 sm:text-3xl">{chapter.title}</h2>
 
               {isVideo && (
-                <div className="space-y-5">
+                <div className="space-y-4 sm:space-y-5">
                   <div className="mobile-edge-card -mx-4 sm:mx-0 sm:rounded-2xl">
                     <VideoPlayer
                       key={chapter.id}
@@ -420,7 +428,7 @@ export const ChapterPage = () => {
                   {theoryContent && (
                     <motion.section
                       layoutId="chapter-theory"
-                      className="mobile-edge-card prose prose-base max-w-none rounded-none border-y border-theme bg-zinc-900/30 p-5 leading-relaxed dark:prose-invert sm:rounded-2xl sm:border sm:p-6"
+                      className="mobile-edge-card prose prose-base prose-zinc max-w-none rounded-none border-y border-theme bg-zinc-900/30 p-5 prose-reading dark:prose-invert sm:rounded-2xl sm:border sm:p-6"
                     >
                       <ReactMarkdown>{theoryContent}</ReactMarkdown>
                     </motion.section>
@@ -438,12 +446,11 @@ export const ChapterPage = () => {
                       <motion.button
                         onClick={handleMarkVideoComplete}
                         disabled={completingVideo || !canMarkVideoComplete}
-                        whileTap={{ scale: canMarkVideoComplete ? 0.95 : 1 }}
-                        className={`flex w-full items-center justify-center gap-2 rounded-xl py-4 text-lg font-bold transition-colors ${
-                          canMarkVideoComplete
+                        whileTap={{ scale: canMarkVideoComplete ? 0.96 : 1 }}
+                        className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-lg font-bold transition-colors ${canMarkVideoComplete
                             ? 'bg-gradient-to-r from-zinc-200 to-zinc-500 text-black shadow-[0_0_15px_rgba(255,255,255,0.2)]'
                             : 'border border-zinc-700 bg-zinc-800/60 text-zinc-500 cursor-not-allowed'
-                        } disabled:opacity-40 disabled:cursor-not-allowed`}
+                          } disabled:opacity-40 disabled:cursor-not-allowed`}
                       >
                         <CheckCircle className="w-5 h-5" />
                         {completingVideo ? 'Saving…' : 'Mark Video Complete'}
@@ -455,7 +462,7 @@ export const ChapterPage = () => {
                     <motion.div
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300"
+                      className="flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300"
                     >
                       <Check className="w-5 h-5" />
                       Video Complete ✓
@@ -488,7 +495,7 @@ export const ChapterPage = () => {
                       <BookOpen className="h-5 w-5 text-primary" />
                       <h3 className="text-xl font-semibold text-primary">Detailed Theory</h3>
                     </div>
-                    <div className="prose prose-base max-w-none leading-relaxed dark:prose-invert">
+                    <div className="prose prose-base prose-zinc max-w-none prose-reading dark:prose-invert">
                       <ReactMarkdown>{theoryContent}</ReactMarkdown>
                     </div>
                   </motion.section>
@@ -526,13 +533,14 @@ export const ChapterPage = () => {
                   </motion.div>
                   <p className="text-emerald-200 font-semibold">Chapter complete!</p>
                   {chapterOrder < TOTAL_CHAPTERS && chapter && isChapterComplete(chapter.id) ? (
-                    <button
+                    <motion.button
                       onClick={() => navigate(`/learn/chapter/${chapterOrder + 1}`)}
-                      className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-6 py-3.5 text-base font-semibold text-white hover:bg-violet-600 active:scale-95"
+                      whileTap={{ scale: 0.96 }}
+                      className="inline-flex items-center gap-2 rounded-2xl bg-violet-500 px-6 py-3.5 text-base font-semibold text-white hover:bg-violet-600"
                     >
                       Next Chapter
                       <ChevronRightCircle className="w-5 h-5" />
-                    </button>
+                    </motion.button>
                   ) : null}
                 </motion.div>
               )}
@@ -540,7 +548,7 @@ export const ChapterPage = () => {
               {chapterOrder < TOTAL_CHAPTERS && chapter && !isChapterComplete(chapter.id) && (
                 <button
                   disabled
-                  className="w-full py-3 rounded-xl bg-zinc-800/80 text-zinc-500 font-medium cursor-not-allowed border border-zinc-700/50"
+                  className="w-full py-3 rounded-2xl bg-zinc-800/80 text-zinc-500 font-medium cursor-not-allowed border border-zinc-700/50"
                 >
                   Next Chapter — complete this chapter first
                 </button>

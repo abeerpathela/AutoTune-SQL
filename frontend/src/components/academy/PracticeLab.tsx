@@ -124,7 +124,7 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
   }, [sql, practiceLab]);
 
   return (
-    <section ref={containerRef} className="mobile-edge-card glass overflow-hidden rounded-none sm:rounded-2xl">
+    <section ref={containerRef} className="mobile-edge-card glass overflow-hidden rounded-2xl">
       <div className="flex flex-wrap items-center gap-2 border-b border-theme px-4 py-4 sm:px-6">
         <Terminal className="h-5 w-5 text-primary" />
         <h3 className="text-lg font-semibold text-primary sm:text-xl">Practice Lab</h3>
@@ -168,14 +168,15 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 border-b border-zinc-800/60 px-4 py-4 sm:px-6">
-            <button
+            <motion.button
               onClick={handleRunQuery}
               disabled={running}
-              className="interactive-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--text-primary)] px-5 py-3.5 text-base font-semibold text-[var(--bg-base)] hover:opacity-90 active:scale-95 disabled:opacity-50 sm:w-auto"
+              whileTap={{ scale: 0.96 }}
+              className="interactive-target inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--text-primary)] px-5 py-3.5 text-base font-semibold text-[var(--bg-base)] hover:opacity-90 disabled:opacity-50 sm:w-auto"
             >
               <Play className="w-4 h-4" />
               {running ? 'Running…' : 'Run Query'}
-            </button>
+            </motion.button>
             {practiceLab?.expectedResult && (
               <p className="text-xs text-zinc-500">
                 Expected columns: {practiceLab.expectedResult.columns.join(', ')}
@@ -197,7 +198,7 @@ export function PracticeLab({ chapterTitle, practiceLab }: PracticeLabProps) {
               <p className="mb-2 text-xs uppercase tracking-wider text-zinc-500">
                 Results ({rows.length} row{rows.length !== 1 ? 's' : ''})
               </p>
-              <div className="max-h-64 overflow-x-auto overflow-y-auto rounded-xl border border-zinc-800">
+              <div className="max-h-64 overflow-x-auto overflow-y-auto rounded-2xl border border-zinc-800 scrollbar-thin">
                 <table className="min-w-full text-left text-sm">
                   <thead className="bg-zinc-800/80 sticky top-0">
                     <tr>
